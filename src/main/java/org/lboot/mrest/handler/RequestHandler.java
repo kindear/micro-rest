@@ -13,8 +13,11 @@ import java.util.Map;
 /**
  * @author kinder
  * 请求处理接口
+ * 参考请求头常量类 HttpHeaders.ACCEPT etc..
+ * 请求头值 MediaType.APP..
  */
 public interface RequestHandler {
+
     /**
      * 接口处理
      * @param proxy 代理对象
@@ -23,6 +26,43 @@ public interface RequestHandler {
      * @return 执行结果
      */
     public Object handler(Object proxy, Method method, Object[] args);
+
+
+    /**
+     * 代理实现请求体
+     * @param proxy 代理对象
+     * @param method 代理方法
+     * @param args 代理参数
+     * @return 组装结果
+     */
+    default Map<String,Object> proxyBody(Object proxy,Method method, Object[] args){
+        Parameter[] parameters = method.getParameters();
+        Map<String,Object> bodyMap = new HashMap<>();
+        // 遍历字段提取 @Body 信息
+        int paramsLen = parameters.length;
+        for (int i = 0; i < paramsLen; i++){
+            Parameter parameter = parameters[i];
+            Body body = parameter.getAnnotation(Body.class);
+            if (Validator.isNotEmpty(body)){
+                // 如果为空且Bean
+                if (body.value().isEmpty() && !isCustomClass(args[i].getClass())){
+                    Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
+                    for (String key: beanMap.keySet()){
+                        if (!bodyMap.containsKey(key)){
+                            bodyMap.put(key,beanMap.get(key));
+                        }
+                    }
+                }else {
+                    // 基础变量类型
+                    if (!isCustomClass(args[i].getClass())){
+                        bodyMap.put(body.value(),args[i]);
+                    }
+                }
+            }
+        }
+        return bodyMap;
+    }
+
 
     /**
      * 请求参数构建方法

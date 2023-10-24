@@ -19,7 +19,7 @@ public class TestCtl {
     public Object doGet(){
         PageQueryDTO dto = new PageQueryDTO();
         dto.setPageNum(1);
-        dto.setPageSize(100);
-        return testApi.doGet("12", dto, "id");
+        dto.setPageSize(10);
+        return testApi.doGet(dto);
     }
 }
