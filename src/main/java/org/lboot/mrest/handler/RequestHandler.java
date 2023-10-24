@@ -62,6 +62,7 @@ public interface RequestHandler {
         for (String pathKey:pathMap.keySet()){
             url = url.replace("{" + pathKey + "}" , pathMap.get(pathKey).toString());
         }
+        //工具类方法
         String queryUrl = HttpUtil.toParams(queryMap);
         if (queryMap.isEmpty()){
             return url;
@@ -75,7 +76,7 @@ public interface RequestHandler {
     }
 
     /**
-     * 请求头信息默认组装方法
+     * 请求头信息默认组装方法 @Headers(val) > @Headers 具名优先级更高
      * @param headers 请求头[]
      * @param method 方法名词
      * @param args 参数名词
@@ -84,29 +85,26 @@ public interface RequestHandler {
     default Map<String,Object> proxyHeader(String []headers, Method method, Object[] args){
         // 提取
         Map<String,Object> headerMap = new HashMap<>();
-        for (String header:headers){
-            String[] headerParts = header.split(":");
-            String headerKey = headerParts[0].trim();
-            String headerVal = headerParts[1].trim();
-            headerMap.put(headerKey,headerVal);
-        }
+        Parameter[] parameters = method.getParameters();
         // 遍历字段提取 @Headers 信息
-        for(Object object:args){
-            Class<?> clazz = object.getClass();
-            Headers headerAnno = clazz.getAnnotation(Headers.class);
+        int paramsLen = parameters.length;
+        for (int i = 0; i < paramsLen; i++){
+            Parameter parameter = parameters[i];
+            Headers headerAnno = parameter.getAnnotation(Headers.class);
             if (Validator.isNotEmpty(headerAnno)){
-                if (headerAnno.value().isEmpty() && object instanceof Map){
-                    // 提取 Map 相关信息
-                    Map<String, Object> argMap = BeanUtil.beanToMap(object);
-                    for (String key: argMap.keySet()){
-                        // @Headers(val) > @Headers 优先级
-                        if (Validator.isEmpty(headerMap.get(key))){
-                            headerMap.put(key, argMap.get(key));
+                // 如果为空且Bean
+                if (headerAnno.value().isEmpty() && !isCustomClass(args[i].getClass())){
+                    Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
+                    for (String key: beanMap.keySet()){
+                        if (!headerMap.containsKey(key)){
+                            headerMap.put(key,beanMap.get(key));
                         }
                     }
                 }else {
-                    String headerKey = headerAnno.value();
-                    headerMap.put(headerKey, object);
+                    // 基础变量类型
+                    if (!isCustomClass(args[i].getClass())){
+                        headerMap.put(headerAnno.value(),args[i]);
+                    }
                 }
             }
         }

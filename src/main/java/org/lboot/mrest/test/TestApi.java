@@ -10,5 +10,5 @@ public interface TestApi {
     public String doPost(String name);
 
     @Get("http://localhost:8080/{id}")
-    public String doGet(@PathVar("id") String id, @Query PageQueryDTO PageQueryDTO);
+    public String doGet(@PathVar("id") String id, @Query PageQueryDTO PageQueryDTO,@Query("sortBy") String sortBy);
 }
