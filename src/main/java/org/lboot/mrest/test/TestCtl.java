@@ -16,10 +16,9 @@ public class TestCtl {
     }
 
     @GetMapping("get")
-    public Object doGet(){
-        PageQueryDTO dto = new PageQueryDTO();
-        dto.setPageNum(1);
+    public Object doGet(PageQueryDTO dto){
         dto.setPageSize(10);
+        dto.setPageNum(1);
         return testApi.doGet(dto);
     }
 }

@@ -8,9 +8,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class MicroRestExceptionHandler {
     @ExceptionHandler(MicroRestException.class)
-    public ResponseEntity<String> handleCustomRequestException(MicroRestException e) {
+    public ResponseEntity<String> handleMicroRequestException(MicroRestException e) {
         if (e.code == 404){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        else if (e.code == 401){
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.UNAUTHORIZED);
         }
         return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }

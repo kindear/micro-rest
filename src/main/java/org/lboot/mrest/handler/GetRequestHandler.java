@@ -1,5 +1,7 @@
 package org.lboot.mrest.handler;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.TimeInterval;
 import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -24,20 +26,13 @@ public class GetRequestHandler implements RequestHandler{
 
         // 获取注解值
         Get get = method.getAnnotation(Get.class);
+        // 设置计时器
+        TimeInterval timer = DateUtil.timer();
         // 获取请求地址
         String url = get.value();
         url = proxyUrl(url,method,args);
         Map<String,Object> headers = proxyHeader(get.headers(),method,args);
-//        log.info("\n代理构建请求用时:{} ms\n", stopWatch.getTotalTimeMillis());
-        StringBuilder logStr = new StringBuilder();
-        logStr.append("=========请求信息============\n");
-        logStr.append("请求地址:").append(url).append("\n");
-        logStr.append("请求头:\n");
-
-        for (String key: headers.keySet()){
-            logStr.append(key).append(" : ").append(headers.get(key)).append("\n");
-        }
-        log.info("\n{}",logStr);
+        log.info("接口代理构建用时: {} ms", timer.intervalRestart());
 
 
         // 获取参数列表
