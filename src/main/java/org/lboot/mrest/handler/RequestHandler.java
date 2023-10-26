@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.http.HttpUtil;
 import org.lboot.mrest.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -27,6 +28,9 @@ public interface RequestHandler {
      */
     public Object handler(Object proxy, Method method, Object[] args);
 
+    default Map<String, MultipartFile> proxyFile(Object proxy, Method method, Object[] args){
+        return null;
+    }
 
     /**
      * 代理实现请求体

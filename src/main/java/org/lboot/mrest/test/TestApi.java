@@ -13,6 +13,6 @@ public interface TestApi {
     @Post("http://localhost:8080")
     public String doPost(String name);
 
-    @Get("http://wellb.apisev.cn/ufs/file")
+    @Get(value = "http://wellb.apisev.cn/ufs/file")
     public PageResultDTO<Object> doGet(@Query PageQueryDTO dto);
 }
