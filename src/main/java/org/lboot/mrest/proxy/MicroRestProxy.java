@@ -9,6 +9,7 @@ import org.lboot.mrest.annotation.MicroGet;
 import org.lboot.mrest.annotation.MicroPost;
 import org.lboot.mrest.annotation.Post;
 import org.lboot.mrest.handler.GetRequestHandler;
+import org.lboot.mrest.handler.MicroGetRequestHandler;
 import org.lboot.mrest.handler.MicroPostRequestHandler;
 import org.lboot.mrest.handler.PostRequestHandler;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,8 @@ public class MicroRestProxy extends AbstractInvocationDispatcher<ProxyStub, Void
     GetRequestHandler getRequestHandler;
 
     MicroPostRequestHandler microPostRequestHandler;
+
+    MicroGetRequestHandler microGetRequestHandler;
     @Override
     protected Object invoke(StubProxyContext<ProxyStub> stubProxyContext, Object proxy, Method method, Object[] args) throws Throwable {
         // Class<?> clazz = proxy.getClass();
@@ -46,7 +49,7 @@ public class MicroRestProxy extends AbstractInvocationDispatcher<ProxyStub, Void
         }
         MicroGet microGet = method.getAnnotation(MicroGet.class);
         if (microGet != null){
-            return "GET接口";
+            return microGetRequestHandler.handler(proxy,method,args);
         }
 
         return "陈秋生";
