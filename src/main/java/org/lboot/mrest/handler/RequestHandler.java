@@ -44,13 +44,24 @@ public interface RequestHandler {
             Form form = parameter.getAnnotation(Form.class);
             if (Validator.isNotEmpty(form)){
                 // 如果为空且Bean
-                if (form.value().isEmpty() && isCustomClass(args[i].getClass())){
-                    Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
-                    for (String key: beanMap.keySet()){
-                        if (!formMap.containsKey(key)){
-                            formMap.put(key,beanMap.get(key));
+                if (form.value().isEmpty()){
+                    if (isCustomClass(args[i].getClass())){
+                        Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
+                        for (String key: beanMap.keySet()){
+                            if (!formMap.containsKey(key)){
+                                formMap.put(key,beanMap.get(key));
+                            }
+                        }
+                    }else if (args[i] instanceof Map){
+                        // 如果是map
+                        Map<String,Object> beanMap = (Map<String, Object>) args[i];
+                        for (String key: beanMap.keySet()){
+                            if (!formMap.containsKey(key)){
+                                formMap.put(key,beanMap.get(key));
+                            }
                         }
                     }
+
                 }else {
                     // 基础变量类型
                     if (!isCustomClass(args[i].getClass())){
@@ -126,22 +137,41 @@ public interface RequestHandler {
         Map<String,Object> queryMap = new HashMap<>();
         // 构建请求地址
         for (int i = 0; i < parameters.length; i++){
+            // 获取部分基础信息
+            Class<?> clazz = args[i].getClass();
+            boolean isCustom = isCustomClass(clazz);
             Parameter parameter = parameters[i];
             // 路径参数注解
             PathVar pathVar = parameter.getAnnotation(PathVar.class);
             if (Validator.isNotEmpty(pathVar)){
-                if (!pathVar.value().isEmpty()){
+                // PathVar 不支持复杂参数
+                if (pathVar.value().isEmpty()){
+                    pathMap.put(parameter.getName(), args[i]);
+                }else {
                     pathMap.put(pathVar.value(), args[i]);
                 }
             }
             // 请求参数注解
             Query query = parameter.getAnnotation(Query.class);
             if (Validator.isNotEmpty(query)){
-                if (query.value().isEmpty() && isCustomClass(args[i].getClass())){
-                    Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
-                    queryMap.putAll(beanMap);
-                }else if (!query.value().isEmpty() && !isCustomClass(args[i].getClass())){
-                    queryMap.put(query.value(), args[i]);
+
+                // @Query 没有指定值
+                if (query.value().isEmpty()){
+                    // 如果是 Bean ，转化为 Map
+                    if (isCustom){
+                        Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
+                        queryMap.putAll(beanMap);
+                    }else {
+                        // 如果不是，提取参数名
+                        queryMap.put(parameter.getName(), args[i]);
+                    }
+
+
+                }else {
+                    if (!isCustom){
+                        queryMap.put(query.value(), args[i]);
+                    }
+
                 }
             }
         }
