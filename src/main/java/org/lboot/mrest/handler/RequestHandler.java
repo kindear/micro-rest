@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.http.HttpUtil;
 import org.lboot.mrest.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -28,8 +27,39 @@ public interface RequestHandler {
      */
     public Object handler(Object proxy, Method method, Object[] args);
 
-    default Map<String, MultipartFile> proxyFile(Object proxy, Method method, Object[] args){
-        return null;
+    /**
+     * 代理请求表单
+     * @param proxy 代理对象
+     * @param method 代理方法
+     * @param args 代理参数
+     * @return 组装结果
+     */
+    default Map<String, Object> proxyForm(Object proxy, Method method, Object[] args){
+        Parameter[] parameters = method.getParameters();
+        Map<String,Object> formMap = new HashMap<>();
+        // 遍历字段提取 @Body 信息
+        int paramsLen = parameters.length;
+        for (int i = 0; i < paramsLen; i++){
+            Parameter parameter = parameters[i];
+            Form form = parameter.getAnnotation(Form.class);
+            if (Validator.isNotEmpty(form)){
+                // 如果为空且Bean
+                if (form.value().isEmpty() && !isCustomClass(args[i].getClass())){
+                    Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
+                    for (String key: beanMap.keySet()){
+                        if (!formMap.containsKey(key)){
+                            formMap.put(key,beanMap.get(key));
+                        }
+                    }
+                }else {
+                    // 基础变量类型
+                    if (!isCustomClass(args[i].getClass())){
+                        formMap.put(form.value(),args[i]);
+                    }
+                }
+            }
+        }
+        return formMap;
     }
 
     /**
