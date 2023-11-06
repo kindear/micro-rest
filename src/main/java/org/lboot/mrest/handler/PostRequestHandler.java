@@ -57,7 +57,7 @@ public class PostRequestHandler implements RequestHandler{
             }
             requestBody = formBody.build();
         }
-        // 如果是表单
+        // 如果是file表单
         if (headers.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.MULTIPART_FORM_DATA_VALUE)){
 
         }

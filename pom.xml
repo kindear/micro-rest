@@ -57,6 +57,12 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+        <!--审计模式-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
     <!--jitpack-->
     <repositories>

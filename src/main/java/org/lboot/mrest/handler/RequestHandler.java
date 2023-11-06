@@ -44,7 +44,7 @@ public interface RequestHandler {
             Form form = parameter.getAnnotation(Form.class);
             if (Validator.isNotEmpty(form)){
                 // 如果为空且Bean
-                if (form.value().isEmpty() && !isCustomClass(args[i].getClass())){
+                if (form.value().isEmpty() && isCustomClass(args[i].getClass())){
                     Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
                     for (String key: beanMap.keySet()){
                         if (!formMap.containsKey(key)){
@@ -79,19 +79,33 @@ public interface RequestHandler {
             Body body = parameter.getAnnotation(Body.class);
             if (Validator.isNotEmpty(body)){
                 // 如果为空且Bean
-                if (body.value().isEmpty() && !isCustomClass(args[i].getClass())){
-                    Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
-                    for (String key: beanMap.keySet()){
-                        if (!bodyMap.containsKey(key)){
-                            bodyMap.put(key,beanMap.get(key));
+                if (body.value().isEmpty()){
+                    if (isCustomClass(args[i].getClass())){
+                        Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
+                        for (String key: beanMap.keySet()){
+                            if (!bodyMap.containsKey(key)){
+                                bodyMap.put(key,beanMap.get(key));
+                            }
+                        }
+                    }else if (args[i] instanceof Map){
+                        // 如果是map
+                        Map<String,Object> beanMap = (Map<String, Object>) args[i];
+                        for (String key: beanMap.keySet()){
+                            if (!bodyMap.containsKey(key)){
+                                bodyMap.put(key,beanMap.get(key));
+                            }
                         }
                     }
+
                 }else {
+
                     // 基础变量类型
-                    if (!isCustomClass(args[i].getClass())){
+                    if ( !isCustomClass(args[i].getClass())){
                         bodyMap.put(body.value(),args[i]);
                     }
+
                 }
+                //System.out.println(bodyMap.toString());
             }
         }
         return bodyMap;
@@ -167,7 +181,7 @@ public interface RequestHandler {
             Headers headerAnno = parameter.getAnnotation(Headers.class);
             if (Validator.isNotEmpty(headerAnno)){
                 // 如果为空且Bean
-                if (headerAnno.value().isEmpty() && !isCustomClass(args[i].getClass())){
+                if (headerAnno.value().isEmpty() && isCustomClass(args[i].getClass())){
                     Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
                     for (String key: beanMap.keySet()){
                         if (!headerMap.containsKey(key)){
