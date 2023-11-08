@@ -8,9 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.lboot.mrest.annotation.Post;
+import org.lboot.mrest.annotation.MicroPut;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.exception.MicroRestException;
+import org.lboot.mrest.service.ServiceResolution;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,8 @@ import java.util.Map;
 @Slf4j
 @Component
 @AllArgsConstructor
-public class PostRequestHandler implements RequestHandler{
+public class MicroPutRequestHandler implements RequestHandler{
+    ServiceResolution serviceResolution;
     @Override
     @SneakyThrows
     public Object handler(Object proxy, Method method, Object[] args) {
@@ -30,17 +32,22 @@ public class PostRequestHandler implements RequestHandler{
         // 设置计时器
         TimeInterval timer = DateUtil.timer();
         // 获取注解值
-        Post post = method.getAnnotation(Post.class);
+        MicroPut microPut = method.getAnnotation(MicroPut.class);
+        // 获取服务名称
+        String serviceName = microPut.serviceName();
         // 获取请求地址
-        String url = post.value();
+        String url = serviceResolution.resolve(serviceName) + microPut.path();
+        if (!url.startsWith("http")){
+            url = "http://" + url;
+        }
         url = proxyUrl(url,method,args);
 
         // 添加请求头
-        Map<String,Object> headers = proxyHeader(post.headers(),method,args);
+        Map<String,Object> headers = proxyHeader(microPut.headers(),method,args);
         // 如果请求头为空，指定 json utf8
         Object contentType = headers.get(HttpHeaders.CONTENT_TYPE);
         if (Validator.isEmpty(contentType)){
-            headers.put(HttpHeaders.CONTENT_TYPE,MediaType.APPLICATION_JSON_UTF8_VALUE);
+            headers.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
         }
         Request.Builder requestBuilder = new Request.Builder();
         for (Map.Entry<String, Object> entry : headers.entrySet()) {
@@ -57,7 +64,7 @@ public class PostRequestHandler implements RequestHandler{
             }
             requestBody = formBody.build();
         }
-        // 如果是file表单
+        // 如果是表单
         if (headers.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.MULTIPART_FORM_DATA_VALUE)){
 
         }
@@ -65,7 +72,7 @@ public class PostRequestHandler implements RequestHandler{
         OkHttpClient client = new OkHttpClient();
         Request request = requestBuilder
                 .url(url)
-                .post(requestBody)
+                .put(requestBody)
                 .build();
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());

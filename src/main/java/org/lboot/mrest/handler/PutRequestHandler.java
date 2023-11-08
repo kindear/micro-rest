@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.lboot.mrest.annotation.Post;
+import org.lboot.mrest.annotation.Put;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.exception.MicroRestException;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +21,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @AllArgsConstructor
-public class PostRequestHandler implements RequestHandler{
+public class PutRequestHandler implements RequestHandler{
     @Override
     @SneakyThrows
     public Object handler(Object proxy, Method method, Object[] args) {
@@ -30,13 +30,13 @@ public class PostRequestHandler implements RequestHandler{
         // 设置计时器
         TimeInterval timer = DateUtil.timer();
         // 获取注解值
-        Post post = method.getAnnotation(Post.class);
+        Put put = method.getAnnotation(Put.class);
         // 获取请求地址
-        String url = post.value();
+        String url = put.value();
         url = proxyUrl(url,method,args);
 
         // 添加请求头
-        Map<String,Object> headers = proxyHeader(post.headers(),method,args);
+        Map<String,Object> headers = proxyHeader(put.headers(),method,args);
         // 如果请求头为空，指定 json utf8
         Object contentType = headers.get(HttpHeaders.CONTENT_TYPE);
         if (Validator.isEmpty(contentType)){
@@ -65,7 +65,7 @@ public class PostRequestHandler implements RequestHandler{
         OkHttpClient client = new OkHttpClient();
         Request request = requestBuilder
                 .url(url)
-                .post(requestBody)
+                .put(requestBody)
                 .build();
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());
