@@ -35,8 +35,17 @@ public class MicroPostRequestHandler implements RequestHandler{
         MicroPost microPost = method.getAnnotation(MicroPost.class);
         // 获取服务名称
         String serviceName = microPost.serviceName();
+        // 获取分组名称
+        String groupName = microPost.groupName();
         // 获取请求地址
-        String url = serviceResolution.resolve(serviceName) + microPost.path();
+        String url = null;
+        if (Validator.isEmpty(groupName)){
+            url = serviceResolution.resolve(serviceName) + microPost.path();
+        }
+        else {
+            url = serviceResolution.resolve(groupName,serviceName) + microPost.path();
+        }
+
         if (!url.startsWith("http")){
             url = "http://" + url;
         }

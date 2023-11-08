@@ -6,6 +6,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface MicroPut {
+    // 分组名称，不传递则为默认分组
+    String groupName() default "";
     // 微服务名称
     String serviceName() default "";
 

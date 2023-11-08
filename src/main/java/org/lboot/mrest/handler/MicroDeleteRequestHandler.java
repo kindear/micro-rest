@@ -2,6 +2,7 @@ package org.lboot.mrest.handler;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.TimeInterval;
+import cn.hutool.core.lang.Validator;
 import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -35,7 +36,16 @@ public class MicroDeleteRequestHandler implements RequestHandler{
         // 获取服务名称
         String serviceName = microDelete.serviceName();
         // 获取请求地址
-        String url = serviceResolution.resolve(serviceName) + microDelete.path();
+        // 获取分组名称
+        String groupName = microDelete.groupName();
+        // 获取请求地址
+        String url = null;
+        if (Validator.isEmpty(groupName)){
+            url = serviceResolution.resolve(serviceName) + microDelete.path();
+        }
+        else {
+            url = serviceResolution.resolve(groupName,serviceName) + microDelete.path();
+        }
         if (!url.startsWith("http")){
             url = "http://" + url;
         }

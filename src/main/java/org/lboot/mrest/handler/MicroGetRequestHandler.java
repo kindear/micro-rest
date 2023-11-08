@@ -2,6 +2,7 @@ package org.lboot.mrest.handler;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.TimeInterval;
+import cn.hutool.core.lang.Validator;
 import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -34,8 +35,16 @@ public class MicroGetRequestHandler implements RequestHandler{
         MicroGet microGet = method.getAnnotation(MicroGet.class);
         // 获取服务名称
         String serviceName = microGet.serviceName();
+        // 获取分组名称
+        String groupName = microGet.groupName();
         // 获取请求地址
-        String url = serviceResolution.resolve(serviceName) + microGet.path();
+        String url = null;
+        if (Validator.isEmpty(groupName)){
+            url = serviceResolution.resolve(serviceName) + microGet.path();
+        }
+        else {
+            url = serviceResolution.resolve(groupName,serviceName) + microGet.path();
+        }
         if (!url.startsWith("http")){
             url = "http://" + url;
         }

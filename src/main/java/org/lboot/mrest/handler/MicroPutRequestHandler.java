@@ -35,8 +35,16 @@ public class MicroPutRequestHandler implements RequestHandler{
         MicroPut microPut = method.getAnnotation(MicroPut.class);
         // 获取服务名称
         String serviceName = microPut.serviceName();
+        // 获取分组名称
+        String groupName = microPut.groupName();
         // 获取请求地址
-        String url = serviceResolution.resolve(serviceName) + microPut.path();
+        String url = null;
+        if (Validator.isEmpty(groupName)){
+            url = serviceResolution.resolve(serviceName) + microPut.path();
+        }
+        else {
+            url = serviceResolution.resolve(groupName,serviceName) + microPut.path();
+        }
         if (!url.startsWith("http")){
             url = "http://" + url;
         }
@@ -63,10 +71,6 @@ public class MicroPutRequestHandler implements RequestHandler{
                 formBody.add(entry.getKey(), entry.getValue().toString());
             }
             requestBody = formBody.build();
-        }
-        // 如果是表单
-        if (headers.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.MULTIPART_FORM_DATA_VALUE)){
-
         }
         // 获取参数列表
         OkHttpClient client = new OkHttpClient();

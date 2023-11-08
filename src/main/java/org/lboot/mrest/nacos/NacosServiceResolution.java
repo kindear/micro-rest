@@ -68,4 +68,45 @@ public class NacosServiceResolution implements ServiceResolution {
         return null;
     }
 
+    @Override
+    public String resolve(String groupName, String serviceName) {
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl httpUrl = Objects.requireNonNull(HttpUrl.parse(buildInstanceListUrl()))
+                .newBuilder()
+                .addQueryParameter("serviceName", serviceName)
+                .addQueryParameter("groupName",groupName)
+                .build();
+        Request request = new Request.Builder()
+                .url(httpUrl)
+                .build();
+
+        try {
+            Response response = client.newCall(request).execute();
+            ResponseBody responseBody = response.body();
+
+            if (responseBody != null) {
+                String resultStr = responseBody.string();
+                JSONObject jsonObject = new JSONObject(resultStr);
+                if (!jsonObject.get("code",Integer.class).equals(0)){
+                    throw new MicroRestException(HttpStatus.BAD_REQUEST.value(), jsonObject.get("message",String.class));
+                }else {
+                    String dataStr = jsonObject.getStr("data");
+                    JSONObject dataObject = new JSONObject(dataStr);
+                    List<ServiceHost> hosts = dataObject.getBeanList("hosts",ServiceHost.class);
+                    if (!hosts.isEmpty()){
+                        ServiceHost host = hosts.get(0);
+                        if (host.getPort() == 80){
+                            return host.getIp();
+                        }else {
+                            return host.getIp() + ":" + host.getPort();
+                        }
+                    }
+                }
+                log.info(resultStr);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
