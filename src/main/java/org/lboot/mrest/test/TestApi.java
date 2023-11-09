@@ -16,4 +16,7 @@ public interface TestApi {
 
     @Get("http://localhost:8080/rbac/status")
     public Object getLoginStatus(@Headers("token") String token);
+
+    @MicroGet(serviceName = "nepu-hrm",path = "/system/user/info")
+    Object getUserInfo(@Headers("token") String token);
 }

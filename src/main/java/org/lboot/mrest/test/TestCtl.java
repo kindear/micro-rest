@@ -41,4 +41,11 @@ public class TestCtl {
         return testApi.doGet();
     }
 
+
+    @GetMapping("userInfo")
+    public Object getUserInfo(){
+        String token = "cb621fb6-4b91-453c-a2e0-f249b60c6993";
+        return testApi.getUserInfo(token);
+    }
+
 }

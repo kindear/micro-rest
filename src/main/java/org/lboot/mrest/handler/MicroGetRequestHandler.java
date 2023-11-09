@@ -60,6 +60,7 @@ public class MicroGetRequestHandler implements RequestHandler{
         // 设置请求地址
         proxyBuild.setUrl(url);
         Map<String,Object> headers = proxyHeader(microGet.headers(),method,args);
+        log.info(headers.toString());
         // 构建请求头
         proxyBuild.buildHeaders(headers);
         // 添加请求头
@@ -78,6 +79,7 @@ public class MicroGetRequestHandler implements RequestHandler{
         Response response = client.newCall(request).execute();
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
+        proxyBuild.print();
         // 发布事件
         context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
         if (response.isSuccessful()) {

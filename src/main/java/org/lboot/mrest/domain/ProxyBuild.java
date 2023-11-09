@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,15 +47,20 @@ public class ProxyBuild implements Serializable {
     List<String> body;
 
     public void buildHeaders(Map<String, Object> headerMap){
-        for (Map.Entry<String, Object> entry : headerMap.entrySet()) {
-            headers.add(entry.getKey() + " : " + entry.getValue());
+        List<String> headers = new ArrayList<>();
+        for (String key:headerMap.keySet()){
+            headers.add(key + " : " + headerMap.get(key));
         }
+        setHeaders(headers);
+
     }
 
     public void buildBody(Map<String,Object> bodyMap){
-        for (Map.Entry<String, Object> entry : bodyMap.entrySet()) {
-            body.add(entry.getKey() + " : " + entry.getValue());
+        List<String> body = new ArrayList<>();
+        for (String key:bodyMap.keySet()){
+            body.add(key + " : " + bodyMap.get(key));
         }
+        setBody(body);
     }
 
 
