@@ -1,9 +1,8 @@
 package org.lboot.mrest.domain;
 
+import cn.hutool.core.lang.Validator;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Headers;
-import okhttp3.Request;
 import org.springframework.scheduling.annotation.Async;
 
 import java.io.Serializable;
@@ -28,6 +27,10 @@ public class ProxyBuild implements Serializable {
      */
     long executeRequestCost;
 
+    /**
+     * 请求地址
+     */
+    String url;
     /**
      * 请求方法
      */
@@ -54,22 +57,36 @@ public class ProxyBuild implements Serializable {
         }
     }
 
-    public void readRequest(Request request){
-        setMethod(request.method());
-        // 读取请求头信息
-        Headers reqHeaders = request.headers();
-        int headersSize = reqHeaders.size();
-        for (int i=0;i<headersSize;i++){
-            headers.add(reqHeaders.name(i) + " : " + reqHeaders.value(i));
-        }
-
-    }
 
     /**
      * 打印接口构建 / 执行相关信息
      */
     @Async
     public void print(){
+        StringBuilder headerSb = new StringBuilder();
+        if (Validator.isNotEmpty(headers)){
+            headers.forEach(ele->{
+                headerSb.append(ele).append("\n");
+            });
+        }
 
+        StringBuilder bodySb = new StringBuilder();
+        if (Validator.isNotEmpty(body)){
+            body.forEach(ele->{
+                bodySb.append(ele).append("\n");
+            });
+        }
+
+        log.info("\n|请求地址      |{}                                               \n" +
+                "|请求方法      |{}                                              \n" +
+                "|构建时长      |{}ms                                              \n" +
+                "|执行时长      |{}ms                                              \n" +
+                "----------------------------------------\n" +
+                "请求头 headers:\n" +
+                "{}      \n" +
+                "----------------------------------------\n" +
+                "请求参数 body:\n" +
+                "{}\n" +
+                "----------------------------------------\n",url,method,proxyRequestCost,executeRequestCost, headerSb, bodySb);
     }
 }

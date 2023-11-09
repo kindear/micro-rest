@@ -12,10 +12,13 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.lboot.mrest.annotation.MicroDelete;
 import org.lboot.mrest.domain.ProxyBuild;
+import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ServiceResolution;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Method;
 import java.util.Map;
 
@@ -23,6 +26,9 @@ import java.util.Map;
 @Component
 @AllArgsConstructor
 public class MicroDeleteRequestHandler implements RequestHandler{
+    @Resource
+    ApplicationContext context;
+
     ServiceResolution serviceResolution;
     @Override
     @SneakyThrows
@@ -67,7 +73,8 @@ public class MicroDeleteRequestHandler implements RequestHandler{
         Response response = client.newCall(request).execute();
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
-        log.info(proxyBuild.toString());
+        // 发布事件
+        context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
         if (response.isSuccessful()) {
             if (response.body() != null) {
                 return JSONUtil.toBean(response.body().string(),method.getReturnType(),true);

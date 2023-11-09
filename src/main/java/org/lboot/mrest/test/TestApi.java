@@ -1,9 +1,6 @@
 package org.lboot.mrest.test;
 
-import org.lboot.mrest.annotation.Body;
-import org.lboot.mrest.annotation.MicroGet;
-import org.lboot.mrest.annotation.MicroPost;
-import org.lboot.mrest.annotation.MicroRest;
+import org.lboot.mrest.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -16,4 +13,7 @@ public interface TestApi {
 
     @MicroGet(serviceName = "nepu-hrm",path = "/hrm/job/grade/types")
     public List<Object> doGet();
+
+    @Get("http://localhost:8080/rbac/status")
+    public Object getLoginStatus(@Headers("token") String token);
 }

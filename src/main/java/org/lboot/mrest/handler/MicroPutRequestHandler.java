@@ -10,12 +10,15 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.lboot.mrest.annotation.MicroPut;
 import org.lboot.mrest.domain.ProxyBuild;
+import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ServiceResolution;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Method;
 import java.util.Map;
 
@@ -23,6 +26,9 @@ import java.util.Map;
 @Component
 @AllArgsConstructor
 public class MicroPutRequestHandler implements RequestHandler{
+    @Resource
+    ApplicationContext context;
+
     ServiceResolution serviceResolution;
     @Override
     @SneakyThrows
@@ -83,7 +89,8 @@ public class MicroPutRequestHandler implements RequestHandler{
         Response response = client.newCall(request).execute();
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
-        log.info(proxyBuild.toString());
+        // 发布事件
+        context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
         if (response.isSuccessful()) {
             if (response.body() != null) {
                 return JSONUtil.toBean(response.body().string(),method.getReturnType(),true);

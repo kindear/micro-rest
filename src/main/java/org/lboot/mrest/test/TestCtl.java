@@ -38,7 +38,6 @@ public class TestCtl {
 
     @GetMapping("get")
     public Object doGet(){
-
         return testApi.doGet();
     }
 
