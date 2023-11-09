@@ -31,6 +31,7 @@ public class DeleteRequestHandler implements RequestHandler{
     public Object handler(Object proxy, Method method, Object[] args) {
         // 设置统计信息
         ProxyBuild proxyBuild = new ProxyBuild();
+        proxyBuild.setMethod("DELETE");
         // 设置计时器
         TimeInterval timer = DateUtil.timer();
         // 获取注解值
@@ -39,6 +40,7 @@ public class DeleteRequestHandler implements RequestHandler{
         String url = delete.value();
         url = proxyUrl(url,method,args);
         Map<String,Object> headers = proxyHeader(delete.headers(),method,args);
+        proxyBuild.buildHeaders(headers);
         // 添加请求头
         Request.Builder requestBuilder = new Request.Builder();
         for (Map.Entry<String, Object> entry : headers.entrySet()) {

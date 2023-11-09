@@ -36,6 +36,7 @@ public class MicroPostRequestHandler implements RequestHandler{
     public Object handler(Object proxy, Method method, Object[] args) {
         // 设置统计信息
         ProxyBuild proxyBuild = new ProxyBuild();
+        proxyBuild.setMethod("POST");
         // 设置计时器
         TimeInterval timer = DateUtil.timer();
         // 获取注解值
@@ -60,6 +61,7 @@ public class MicroPostRequestHandler implements RequestHandler{
 
         // 添加请求头
         Map<String,Object> headers = proxyHeader(microPost.headers(),method,args);
+        proxyBuild.buildHeaders(headers);
         // 如果请求头为空，指定 json utf8
         Object contentType = headers.get(HttpHeaders.CONTENT_TYPE);
         if (Validator.isEmpty(contentType)){
@@ -71,6 +73,7 @@ public class MicroPostRequestHandler implements RequestHandler{
         }
         // 获取请求体
         Map<String,Object> body = proxyBody(proxy,method,args);
+        proxyBuild.buildBody(body);
         RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/json;charset=UTF-8"), JSONUtil.toJsonStr(body));
         // 如果是表单
         if (headers.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.APPLICATION_FORM_URLENCODED_VALUE)){

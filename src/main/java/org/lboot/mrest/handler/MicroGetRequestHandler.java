@@ -79,7 +79,6 @@ public class MicroGetRequestHandler implements RequestHandler{
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
         // 发布事件
-        proxyBuild.print();
         context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
         if (response.isSuccessful()) {
             if (response.body() != null) {

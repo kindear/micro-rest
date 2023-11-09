@@ -31,6 +31,7 @@ public class GetRequestHandler implements RequestHandler{
     public Object handler(Object proxy, Method method, Object[] args) {
         // 设置统计信息
         ProxyBuild proxyBuild = new ProxyBuild();
+        proxyBuild.setMethod("GET");
         // 设置计时器
         TimeInterval timer = DateUtil.timer();
         // 获取注解值
@@ -39,6 +40,7 @@ public class GetRequestHandler implements RequestHandler{
         String url = get.value();
         url = proxyUrl(url,method,args);
         Map<String,Object> headers = proxyHeader(get.headers(),method,args);
+        proxyBuild.buildHeaders(headers);
         // 添加请求头
         Request.Builder requestBuilder = new Request.Builder();
         for (Map.Entry<String, Object> entry : headers.entrySet()) {
