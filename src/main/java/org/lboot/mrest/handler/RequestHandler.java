@@ -203,6 +203,13 @@ public interface RequestHandler {
     default Map<String,Object> proxyHeader(String []headers, Method method, Object[] args){
         // 提取
         Map<String,Object> headerMap = new HashMap<>();
+        // 处理请求头默认配置
+        for (String header:headers){
+            String[] parts = header.split(":");
+            if (parts.length == 2){
+                headerMap.put(parts[0],parts[1]);
+            }
+        }
         Parameter[] parameters = method.getParameters();
         // 遍历字段提取 @Headers 信息
         int paramsLen = parameters.length;
