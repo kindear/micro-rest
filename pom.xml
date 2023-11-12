@@ -127,8 +127,6 @@
                         <!-- 去除指定的包，及其包下的类-->
                         <exclude>**/test/**</exclude>
                         <exclude>**/MicroRestApplication.java</exclude>
-                        <!--排除配置文件-->
-                        <exclude>**/application.properties</exclude>
                     </excludes>
                 </configuration>
             </plugin>
