@@ -2,6 +2,7 @@ package org.lboot.mrest.handler;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.TimeInterval;
+import cn.hutool.core.lang.Validator;
 import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -67,7 +68,13 @@ public class DeleteRequestHandler implements RequestHandler{
             }
         } else {
             // Proxy Request Error 需要抛出异常
-            String message = response.message();
+            String message = null;
+            if (response.body() != null) {
+                message = response.body().string();
+            }
+            if (Validator.isEmpty(message)){
+                message = response.message();
+            }
             Integer code = response.code();
             throw new MicroRestException(code,message);
         }

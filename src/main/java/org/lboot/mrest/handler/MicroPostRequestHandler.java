@@ -107,8 +107,13 @@ public class MicroPostRequestHandler implements RequestHandler{
                 return null;
             }
         } else {
-            // Proxy Request Error 需要抛出异常
-            String message = response.message();
+            String message = null;
+            if (response.body() != null) {
+                message = response.body().string();
+            }
+            if (Validator.isEmpty(message)){
+                message = response.message();
+            }
             Integer code = response.code();
             throw new MicroRestException(code,message);
         }
