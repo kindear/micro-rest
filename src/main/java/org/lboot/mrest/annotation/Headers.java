@@ -1,5 +1,7 @@
 package org.lboot.mrest.annotation;
 
+import org.springframework.context.annotation.ComponentScan;
+
 import java.lang.annotation.*;
 
 /**
