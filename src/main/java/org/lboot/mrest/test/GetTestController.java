@@ -3,6 +3,7 @@ package org.lboot.mrest.test;
 import cn.dev33.satoken.stp.StpUtil;
 import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
+import org.lboot.mrest.annotation.Get;
 import org.lboot.mrest.test.service.AuthApi;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,5 +19,10 @@ public class GetTestController {
     public Object getUserInfo(){
         String token = StpUtil.getTokenValue();
         return authApi.getUserInfo(token);
+    }
+
+    @GetMapping("baidu")
+    public Object testBaidu(){
+        return authApi.testBaidu();
     }
 }

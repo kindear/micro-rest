@@ -15,6 +15,7 @@ import org.lboot.mrest.annotation.Get;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
+import org.lboot.mrest.service.ProxyContextDecorator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +39,13 @@ public class GetRequestHandler implements RequestHandler{
         TimeInterval timer = DateUtil.timer();
         // 获取注解值
         Get get = method.getAnnotation(Get.class);
+        // 获取是否存在装饰器
+        Decorator decorator = method.getAnnotation(Decorator.class);
+        // 装饰器不为空
+        if (Validator.isNotEmpty(decorator)){
+            ProxyContextDecorator proxyContextDecorator = decorator.value().newInstance();
+            log.info(proxyContextDecorator.readHeader().toString());
+        }
         // 获取请求地址
         String url = get.value();
         url = proxyUrl(url,method,args);

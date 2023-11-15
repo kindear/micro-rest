@@ -1,7 +1,5 @@
 package org.lboot.mrest.service;
 
-import lombok.SneakyThrows;
-
 import java.util.Map;
 
 /**
@@ -9,10 +7,10 @@ import java.util.Map;
  * 代理上下文接口
  */
 public abstract class ProxyContextDecorator {
-    public Map<String,Object> proxyHeader(){
+    public Map<String,Object> readHeader(){
         return null;
     }
-    public Map<String,Object> proxyBody(){
+    public Map<String,Object> readBody(){
         return null;
     }
 }
