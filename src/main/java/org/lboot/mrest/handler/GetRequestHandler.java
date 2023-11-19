@@ -50,6 +50,7 @@ public class GetRequestHandler implements RequestHandler{
         String url = get.value();
         url = proxyUrl(url,method,args);
         Map<String,Object> headers = proxyHeader(get.headers(),method,args);
+
         proxyBuild.buildHeaders(headers);
         // 添加请求头
         Request.Builder requestBuilder = new Request.Builder();
