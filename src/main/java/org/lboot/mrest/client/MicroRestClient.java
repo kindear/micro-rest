@@ -142,7 +142,12 @@ public class MicroRestClient {
         // 构建请求地址
         if (Validator.isNotEmpty(query)){
             String queryUrl = HttpUtil.toParams(query);
-            this.url =  url + "?" + queryUrl;
+            if (this.url.contains("?")){
+                this.url = url + "&" + queryUrl;
+            }else {
+                this.url =  url + "?" + queryUrl;
+            }
+
         }
         // 执行请求
         if (method.equals("GET")){
