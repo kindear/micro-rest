@@ -12,6 +12,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.springframework.http.HttpMethod;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -144,6 +145,13 @@ public class MicroRestClient {
             this.url =  url + "?" + queryUrl;
         }
         // 执行请求
+        if (method.equals("GET")){
+            Request request = requestBuilder
+                    .url(url)
+                    .get()
+                    .build();
+            return client.newCall(request).execute();
+        }
         if (method.equals("POST")){
             Request request = requestBuilder
                     .url(url)
@@ -165,10 +173,18 @@ public class MicroRestClient {
                     .build();
             return client.newCall(request).execute();
         }
-        if (method.equals("GET")){
+
+        if (method.equals("PATCH")){
             Request request = requestBuilder
                     .url(url)
-                    .get()
+                    .patch(requestBody)
+                    .build();
+            return client.newCall(request).execute();
+        }
+        if (method.equals("HEAD") || method.equals("OPTIONS")){
+            Request request = requestBuilder
+                    .url(url)
+                    .head()
                     .build();
             return client.newCall(request).execute();
         }
@@ -176,10 +192,11 @@ public class MicroRestClient {
         return null;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
        // MicroRestClient client = new MicroRestClient().method(HttpMethod.GET).url("http://localhost:8080").addQuery("name","kindear");
 
-        Response response = new MicroRestClient().method(HttpMethod.GET).url("http://localhost:8080").addQuery("name","kindear").execute();
+        Response response = new MicroRestClient().method(HttpMethod.GET).url("https://jsonplaceholder.typicode.com/posts/2").execute();
+        log.info(response.body().string());
 
         //log.info(client.toString());
     }
