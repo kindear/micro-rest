@@ -44,7 +44,7 @@ public class GetRequestHandler implements RequestHandler{
         // 装饰器不为空
         if (Validator.isNotEmpty(decorator)){
             ProxyContextDecorator proxyContextDecorator = decorator.value().newInstance();
-            log.info(proxyContextDecorator.readHeader().toString());
+            //log.info(proxyContextDecorator.readHeader().toString());
         }
         // 获取请求地址
         String url = get.value();
