@@ -3,6 +3,7 @@ package org.lboot.mrest.handler;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.http.HttpUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.lboot.mrest.annotation.*;
 
 import java.lang.reflect.Method;

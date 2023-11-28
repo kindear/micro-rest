@@ -1,8 +1,30 @@
 # MicroRest
 
-`MircoRest`是一款基于`okhttp`构建的 `http`客户端请求框架，优雅适配了微服务请求，它能够将 HTTP 的所有请求信息（包括 URL、Header 以及 Body 等信息）绑定到您自定义的 Interface 方法上，能够通过调用本地接口方法的方式发送 HTTP 请求。
+`MircoRest`是一款基于`okhttp`构建的 `http`客户端请求框架，优雅适配了微服务请求，它能够将 HTTP 的所有请求信息（包括 URL、Header 以及 Body 等信息）绑定到您自定义的 Interface 方法上，支持上下文穿透、请求参数动态修改，能够通过调用本地接口方法的方式发送 HTTP 请求。
 
 其设计思想基于动态代理。
+
+## 特性
+
+- [x] 自动类型转化，接口返回值自动转化为函数接收对象类型(使用Map fillBean)
+
+- [x] 传统`HTTP` 请求支持， `@Get` `@Post` `@Put` `@Delete` 支持
+
+- [x] 微服务请求支持，`@MicroGet` `@MicroPost` `@MicroPut` `@MicroDelete` 支持，默认支持 `NacOS`，支持自定义拓展
+
+- [x] 请求参数自定义，`@PathVar` 自定义路径参数 , `@Query` 自定义查询参数
+
+- [x] 请求头自定义 ，`@Headers` 请求头支持
+
+- [x] 请求体自定义， `@Body` 请求体支持
+
+- [x] 自定义请求客户端 `MicroRestClient`
+
+- [ ] 
+
+  
+
+
 
 ## 安装配置
 
@@ -48,9 +70,82 @@ nacos.discovery.enabled=true
 
 ## 快速上手
 
+
+
 对于需要自定义的接口，需要用 `@MicroRest`标记为需要动态代理实现的接口，程序编译时会自动构建对应的请求方法。对于请求返回的结果，程序会自动读取接口参数类型并构建转化函数实现数据的转化。
+
+### 请求地址构建
+
+> 接口测试请参考：[前端需要的免费在线api接口 - 掘金 (juejin.cn)](https://juejin.cn/post/7041461420818432030)
+
+构建一个请求，最重要的是请求地址的构建，如下注解实现了请求路径参数和查询参数的构建
+
+#### @PathVar 
+
+> 路径参数构建
+
+`@PathVar("key")` 可以指定路径参数名称，如果没有指定，则按照当前参数实际名称进行替换，例如下图两种定义方式都可以。
+
+```java
+@MicroRest
+public interface TestPostApi {
+    @Get("http://jsonplaceholder.typicode.com/posts/{id}")
+    PostVO getPost(@PathVar Long id);
+    
+    @Get("http://jsonplaceholder.typicode.com/posts/{id}")
+    PostVO getPost(@PathVar("id") Long xx);
+}
+```
+
+
+
+#### @Query
+
+> 查询参数构建
+
+其参数替换有如下规则：
+
+1. 指定参数为基础数据类型（原子性数据，不可再分割，例如 `Integer, Long, String `），支持使用`@Query("key") ` 指定参数名称，或使用 `@Query` 使用当前参数实际名称，下面两种定义方式效果一致。
+
+   ```java
+   @MicroRest
+   public interface TestPostApi {
+       @Get("http://jsonplaceholder.typicode.com/posts")
+       List<PostVO> getPosts(@Query("userId") Long xx);
+       
+       @Get("http://jsonplaceholder.typicode.com/posts")
+       List<PostVO> getPosts(@Query Long userId);
+   }
+   ```
+
+2. 指定参数非基础数据类型，例如`Map,用户自定义类`, 仅支持 `@Query`，支持自动转化参数，下面定义效果与上面一致。
+
+   > 用户自定义查询参数
+
+   ```java
+   class QueryParams{
+   	String userId;
+   }
+   ```
+
+   ```java
+   @MicroRest
+   public interface TestPostApi {
+       @Get("http://jsonplaceholder.typicode.com/posts")
+       List<PostVO> getPosts(@Query QueryParams params);
+   }
+   ```
+
+
+
+#### @Headers
+
+> 请求头信息构建
+
+
+
+
 
 ### 请求方法构建
 
-
-
+> 
