@@ -10,7 +10,7 @@ public interface TestPostApi {
     @Get("http://jsonplaceholder.typicode.com/posts")
     List<PostVO> getPosts();
 
-    @Get("http://jsonplaceholder.typicode.com/posts")
+    @Get(url = "http://jsonplaceholder.typicode.com/posts")
     List<PostVO> getUserPosts(@Query("userId") String userId);
 
     @Get("http://jsonplaceholder.typicode.com/posts/{id}")

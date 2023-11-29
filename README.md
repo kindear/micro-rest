@@ -138,14 +138,106 @@ public interface TestPostApi {
 
 
 
+
+
+### 请求头构建
+
 #### @Headers
 
 > 请求头信息构建
 
+其参数替换有如下规则：
+
+1. 指定参数为基础数据类型（原子性数据，不可再分割，例如 `Integer, Long, String `），支持使用`@Headers("key") ` 指定参数名称，或使用 `@Headers` 使用当前参数实际名称，下面两种定义方式效果一致。
+
+   ```java
+   @MicroRest
+   public interface TestPostApi {
+       @Get("http://jsonplaceholder.typicode.com/posts")
+       List<PostVO> getPosts(@Headers("token") String token);
+       
+       @Get("http://jsonplaceholder.typicode.com/posts")
+       List<PostVO> getPosts(@Headers String token);
+   }
+   ```
+
+2. 指定参数非基础数据类型，例如`Map,用户自定义类`, 仅支持 `@Headers`，支持自动转化参数，下面定义效果与上面一致。
+
+   > 自定义实体类
+
+   ```java
+   class CustomHeaders{
+   	String token = "xxx";
+   }
+   ```
+
+   > Map
+
+   ```json
+   {
+   	"Content-Type":"application/x-www-form-urlencoded"
+   }
+   ```
+
+   > 使用举例
+
+   ```java
+   @MicroRest
+   public interface TestPostApi {
+       @Get("http://jsonplaceholder.typicode.com/posts")
+       List<PostVO> getPosts(@Headers CustomHeaders headers);
+       
+       @Get("http://jsonplaceholder.typicode.com/posts")
+       List<PostVO> getPosts(@Headers Map<String,Object> headers);
+   }
+   ```
+
+3. 原子性数据参数优先级大于自定义类或`Map`, 会覆盖其中的数据。
+
+#### 固定传值
+
+例如`@Get`, `@MicroPost`等一些列注解，都支持请求头参数配置，其配置形式如下:
+
+```java
+@MicroRest
+public interface TestPostApi {
+    @Post(url = "http://jsonplaceholder.typicode.com/posts",
+    headers = {
+           "Content-Type:application/x-www-form-urlencoded;charset=utf-8"
+    })
+    PostVO createPost(@Headers Map<String,Object> headers);
+}
+```
+
+这种方式一般用于固定数值的请求头，需要动态变化的，采用上面的方式进行组装。
 
 
 
+### 请求体构建
 
-### 请求方法构建
+#### @Body
 
-> 
+> 请求体构建
+
+该参数用法和`@Query`, `@Headers` 都很相似
+
+1. 指定参数为基础数据类型（原子性数据，不可再分割，例如 `Integer, Long, String `），支持使用`@Body("key") ` 指定参数名称，或使用 `@Body` 使用当前参数实际名称。
+
+2. 指定参数非基础数据类型，例如`Map,用户自定义类`, 仅支持 `@Body`，支持自动转化参数，下面定义效果与上面一致。
+
+3. 原子性数据参数优先级大于自定义类或`Map`, 会覆盖其中的数据。
+
+   ```java
+   @MicroRest
+   public interface TestPostApi {
+       @Post("http://jsonplaceholder.typicode.com/posts")
+       Object createPost(@Body PostVO postVO);
+   }
+   ```
+
+### 微服务请求支持
+
+基于`OpenApi`实现了对`NacOS`微服务请求的支持
+
+
+
