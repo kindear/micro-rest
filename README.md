@@ -237,7 +237,29 @@ public interface TestPostApi {
 
 ### 微服务请求支持
 
-基于`OpenApi`实现了对`NacOS`微服务请求的支持
+#### 基础使用
+
+基于`OpenApi`实现了对`NacOS`微服务请求的支持，指定服务名称，构建请求时，会自动将服务名称置换为对应的请求地址
+
+```java
+@MicroRest
+public interface AuthApi {
+    @MicroGet(serviceName = "auth-hrm",path = "/system/user/info")
+    AuthInfo getUserInfo(@Headers("token") String token);
+
+
+    @MicroGet(serviceName = "auth-hrm", path = "/system/users/{id}")
+    List<Object> getUserById(@PathVar("id") String id);
+}
+```
+
+
+
+#### 自定义服务解析
+
+通过继承实现 `ServiceResolution` 接口，可以适配多种服务注册发现中心，以本项目默认实现举例:
+
+
 
 
 
