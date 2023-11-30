@@ -29,7 +29,8 @@ public class MicroRestClient {
 
     String url;
 
-    String method;
+    // 设置默认GET请求
+    String method = "GET";
 
     Map<String,Object> query = new HashMap<>();
 

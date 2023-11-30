@@ -3,7 +3,9 @@ package org.lboot.mrest.nacos;
 import cn.hutool.json.JSONObject;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.nacos.domain.ServiceHost;
 import org.lboot.mrest.service.ServiceResolution;
@@ -11,8 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
-import java.util.Objects;
-
+// @TODO 应该使用个定时器， 定时查询 -> 写入单例 concurrentHashMap
 @Slf4j
 public class NacosServiceResolution implements ServiceResolution {
 
@@ -29,17 +30,25 @@ public class NacosServiceResolution implements ServiceResolution {
     @Override
     @SneakyThrows
     public String resolve(String serviceName) {
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl httpUrl = Objects.requireNonNull(HttpUrl.parse(buildInstanceListUrl()))
-                .newBuilder()
-                .addQueryParameter("serviceName", serviceName)
-                .build();
-        Request request = new Request.Builder()
-                .url(httpUrl)
-                .build();
+//        MicroRestClient restClient = new MicroRestClient()
+//                .url(buildInstanceListUrl())
+//                .addQuery("serviceName",serviceName)
+//                .execute();
+//        OkHttpClient client = new OkHttpClient();
+//        HttpUrl httpUrl = Objects.requireNonNull(HttpUrl.parse(buildInstanceListUrl()))
+//                .newBuilder()
+//                .addQueryParameter("serviceName", serviceName)
+//                .build();
+//        Request request = new Request.Builder()
+//                .url(httpUrl)
+//                .build();
 
         try {
-            Response response = client.newCall(request).execute();
+//            Response response = client.newCall(request).execute();
+            Response response = new MicroRestClient()
+                    .url(buildInstanceListUrl())
+                    .addQuery("serviceName",serviceName)
+                    .execute();
             ResponseBody responseBody = response.body();
 
             if (responseBody != null) {
@@ -63,25 +72,28 @@ public class NacosServiceResolution implements ServiceResolution {
                 log.info(resultStr);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
+            //e.printStackTrace();
         }
         return null;
     }
 
     @Override
     public String resolve(String groupName, String serviceName) {
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl httpUrl = Objects.requireNonNull(HttpUrl.parse(buildInstanceListUrl()))
-                .newBuilder()
-                .addQueryParameter("serviceName", serviceName)
-                .addQueryParameter("groupName",groupName)
-                .build();
-        Request request = new Request.Builder()
-                .url(httpUrl)
-                .build();
-
+//        OkHttpClient client = new OkHttpClient();
+//        HttpUrl httpUrl = Objects.requireNonNull(HttpUrl.parse(buildInstanceListUrl()))
+//                .newBuilder()
+//                .addQueryParameter("serviceName", serviceName)
+//                .addQueryParameter("groupName",groupName)
+//                .build();
+//        Request request = new Request.Builder()
+//                .url(httpUrl)
+//                .build();
         try {
-            Response response = client.newCall(request).execute();
+            Response response = new MicroRestClient()
+                    .url(buildInstanceListUrl())
+                    .addQuery("serviceName",serviceName)
+                    .execute();
             ResponseBody responseBody = response.body();
 
             if (responseBody != null) {
@@ -105,7 +117,8 @@ public class NacosServiceResolution implements ServiceResolution {
                 log.info(resultStr);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
+            // e.printStackTrace();
         }
         return null;
     }
