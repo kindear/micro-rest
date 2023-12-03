@@ -65,6 +65,7 @@ public class MicroPutRequestHandler implements RequestHandler{
         if (Validator.isEmpty(contentType)){
             headers.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
         }
+
         Request.Builder requestBuilder = new Request.Builder();
         for (Map.Entry<String, Object> entry : headers.entrySet()) {
             requestBuilder.addHeader(entry.getKey(), entry.getValue().toString());
@@ -72,6 +73,7 @@ public class MicroPutRequestHandler implements RequestHandler{
         // 获取请求体
         Map<String,Object> body = proxyBody(proxy,method,args);
         proxyBuild.buildBody(body);
+
         RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/json;charset=UTF-8"), JSONUtil.toJsonStr(body));
         // 如果是表单
         if (headers.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.APPLICATION_FORM_URLENCODED_VALUE)){

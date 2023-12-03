@@ -8,10 +8,12 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.Put;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
+import org.lboot.mrest.service.ProxyContextDecorator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -40,11 +42,14 @@ public class PutRequestHandler implements RequestHandler{
         Put put = method.getAnnotation(Put.class);
         // 获取请求地址
         String url = put.value();
+        if (Validator.isEmpty(url)){
+            url = put.url();
+        }
         url = proxyUrl(url,method,args);
 
         // 添加请求头
         Map<String,Object> headers = proxyHeader(put.headers(),method,args);
-        proxyBuild.buildHeaders(headers);
+
         // 如果请求头为空，指定 json utf8
         Object contentType = headers.get(HttpHeaders.CONTENT_TYPE);
         if (Validator.isEmpty(contentType)){
@@ -56,6 +61,24 @@ public class PutRequestHandler implements RequestHandler{
         }
         // 获取请求体
         Map<String,Object> body = proxyBody(proxy,method,args);
+        // 获取是否存在透传装饰器 --> 如果不存在则加入，透传优先级最低
+        Decorator decorator = method.getAnnotation(Decorator.class);
+        if (Validator.isNotEmpty(decorator)){
+            ProxyContextDecorator proxyContextDecorator = decorator.value().newInstance();
+            Map<String,Object> decoratorHeader = proxyContextDecorator.readHeader();
+            for (String key:decoratorHeader.keySet()){
+                if (!headers.containsKey(key)){
+                    headers.put(key, decoratorHeader.get(key));
+                }
+            }
+            Map<String,Object> decoratorBody = proxyContextDecorator.readBody();
+            for (String key:decoratorBody.keySet()){
+                if (!body.containsKey(key)){
+                    body.put(key,decoratorBody.get(key));
+                }
+            }
+        }
+        proxyBuild.buildHeaders(headers);
         proxyBuild.buildBody(body);
         RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/json;charset=UTF-8"), JSONUtil.toJsonStr(body));
         // 如果是表单

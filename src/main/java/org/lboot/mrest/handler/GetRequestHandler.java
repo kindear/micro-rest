@@ -7,11 +7,10 @@ import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Response;
 import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.Get;
+import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
@@ -39,36 +38,39 @@ public class GetRequestHandler implements RequestHandler{
         TimeInterval timer = DateUtil.timer();
         // 获取注解值
         Get get = method.getAnnotation(Get.class);
-        // 获取是否存在装饰器
-        Decorator decorator = method.getAnnotation(Decorator.class);
-        // 装饰器不为空
-        if (Validator.isNotEmpty(decorator)){
-            ProxyContextDecorator proxyContextDecorator = decorator.value().newInstance();
-            //log.info(proxyContextDecorator.readHeader().toString());
-        }
         // 获取请求地址
         String url = get.value();
-        url = proxyUrl(url,method,args);
-        Map<String,Object> headers = proxyHeader(get.headers(),method,args);
-
-        proxyBuild.buildHeaders(headers);
-        // 添加请求头
-        Request.Builder requestBuilder = new Request.Builder();
-        for (Map.Entry<String, Object> entry : headers.entrySet()) {
-            requestBuilder.addHeader(entry.getKey(), entry.getValue().toString());
+        if (Validator.isEmpty(url)){
+            url = get.url();
         }
-        // 获取参数列表
-        OkHttpClient client = new OkHttpClient();
-        Request request = requestBuilder
+        url = proxyUrl(url,method,args);
+        // 记录
+        proxyBuild.setUrl(url);
+        // 构建请求头
+        Map<String,Object> headers = proxyHeader(get.headers(),method,args);
+        // 获取是否存在透传装饰器 --> 如果不存在则加入，透传优先级最低
+        Decorator decorator = method.getAnnotation(Decorator.class);
+        if (Validator.isNotEmpty(decorator)){
+            ProxyContextDecorator proxyContextDecorator = decorator.value().newInstance();
+            Map<String,Object> decoratorHeader = proxyContextDecorator.readHeader();
+            for (String key:decoratorHeader.keySet()){
+                if (!headers.containsKey(key)){
+                    headers.put(key, decoratorHeader.get(key));
+                }
+            }
+        }
+        // 构建记录加入
+        proxyBuild.buildHeaders(headers);
+        MicroRestClient client = new MicroRestClient()
                 .url(url)
-                .get()
-                .build();
+                .header(headers);
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());
-        Response response = client.newCall(request).execute();
-        // 记录接口执行时间
+        Response response = client.execute();
+        // 记录执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
-
+        // 打印日志
+        proxyBuild.print();
         // 发布事件
         context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
         if (response.isSuccessful()) {

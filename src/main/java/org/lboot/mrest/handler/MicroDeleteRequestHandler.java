@@ -10,10 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.MicroDelete;
+import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
+import org.lboot.mrest.service.ProxyContextDecorator;
 import org.lboot.mrest.service.ServiceResolution;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -58,6 +61,17 @@ public class MicroDeleteRequestHandler implements RequestHandler{
         }
         url = proxyUrl(url,method,args);
         Map<String,Object> headers = proxyHeader(microDelete.headers(),method,args);
+        // 获取是否存在透传装饰器 --> 如果不存在则加入，透传优先级最低
+        Decorator decorator = method.getAnnotation(Decorator.class);
+        if (Validator.isNotEmpty(decorator)){
+            ProxyContextDecorator proxyContextDecorator = decorator.value().newInstance();
+            Map<String,Object> decoratorHeader = proxyContextDecorator.readHeader();
+            for (String key:decoratorHeader.keySet()){
+                if (!headers.containsKey(key)){
+                    headers.put(key, decoratorHeader.get(key));
+                }
+            }
+        }
         proxyBuild.buildHeaders(headers);
         // 添加请求头
         Request.Builder requestBuilder = new Request.Builder();
@@ -66,6 +80,10 @@ public class MicroDeleteRequestHandler implements RequestHandler{
         }
         // 获取参数列表
         OkHttpClient client = new OkHttpClient();
+//        Response response = new MicroRestClient()
+//                .url(url)
+//                .header(headers)
+//                .execute();
         Request request = requestBuilder
                 .url(url)
                 .delete()
