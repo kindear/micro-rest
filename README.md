@@ -72,13 +72,9 @@ nacos.discovery.enabled=true
 
 > 开放接口提供文章： https://juejin.cn/post/7041461420818432030
 
-
-
 对于需要自定义的接口，需要用 `@MicroRest`标记为需要动态代理实现的接口，程序编译时会自动构建对应的请求方法。对于请求返回的结果，程序会自动读取接口参数类型并构建转化函数实现数据的转化。
 
 ### 请求地址构建
-
-> 接口测试请参考：[前端需要的免费在线api接口 - 掘金 (juejin.cn)](https://juejin.cn/post/7041461420818432030)
 
 构建一个请求，最重要的是请求地址的构建，如下注解实现了请求路径参数和查询参数的构建
 
@@ -196,7 +192,7 @@ public interface TestPostApi {
 
 3. 原子性数据参数优先级大于自定义类或`Map`, 会覆盖其中的数据。
 
-#### 固定传值
+#### @Anno headers
 
 例如`@Get`, `@MicroPost`等一些列注解，都支持请求头参数配置，其配置形式如下:
 
@@ -225,7 +221,7 @@ public interface TestPostApi {
 
 1. 指定参数为基础数据类型（原子性数据，不可再分割，例如 `Integer, Long, String `），支持使用`@Body("key") ` 指定参数名称，或使用 `@Body` 使用当前参数实际名称。
 
-2. 指定参数非基础数据类型，例如`Map,用户自定义类`, 仅支持 `@Body`，支持自动转化参数，下面定义效果与上面一致。
+2. 指定参数非基础数据类型，例如`Map,用户自定义类`, 仅支持 `@Body`，支持自动转化参数。
 
 3. 原子性数据参数优先级大于自定义类或`Map`, 会覆盖其中的数据。
 
@@ -236,6 +232,8 @@ public interface TestPostApi {
        Object createPost(@Body PostVO postVO);
    }
    ```
+
+
 
 ### 微服务请求支持
 
@@ -261,7 +259,42 @@ public interface AuthApi {
 
 通过继承实现 `ServiceResolution` 接口，可以适配多种服务注册发现中心，以本项目默认实现举例:
 
+[NacosServiceResolution.java](https://gitee.com/lboot/micro-rest/blob/master/src/main/java/org/lboot/mrest/nacos/NacosServiceResolution.java)
 
+
+
+### 请求客户端
+
+基于`okhttp`构建请求比较复杂，基于`okhttp`封装`MircoRestClient`，可以非常方便的构建请求。
+
+用法举例:
+
+```java
+Response response = new MicroRestClient()
+                    .url("http://localhost:8001")
+                    .addQuery("serviceName",serviceName)
+                    .addQuery("groupName", groupName)
+                    .execute();
+ResponseBody responseBody = response.body();
+```
+
+
+
+支持方法:
+
+| 方法                              | 备注         | 返回结果         |
+| --------------------------------- | ------------ | ---------------- |
+| header(Map<String,Object> header) | 设置请求头   | MicroRestClient  |
+| addHeader(String key, Object val) | 设置请求头   | MicroRestClient  |
+| body(Map<String,Object> body)     | 设置请求体   | MicroRestClient  |
+| addBody(String key, Object val)   | 设置请求体   | MicroRestClient  |
+| query(Map<String,Object> query)   | 设置请求参数 | MicroRestClient  |
+| addQuery(String key, Object val)  | 设置请求参数 | MicroRestClient  |
+| method(HttpMethod httpMethod)     | 设置请求方法 | MicroRestClient  |
+| method(String method)             | 设置请求方法 | MicroRestClient  |
+| url(String url)                   | 设置请求地址 | MicroRestClient  |
+| execute()                         | 请求执行     | Response:okhttp3 |
+|                                   |              |                  |
 
 
 

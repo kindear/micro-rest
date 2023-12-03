@@ -93,6 +93,7 @@ public class NacosServiceResolution implements ServiceResolution {
             Response response = new MicroRestClient()
                     .url(buildInstanceListUrl())
                     .addQuery("serviceName",serviceName)
+                    .addQuery("groupName", groupName)
                     .execute();
             ResponseBody responseBody = response.body();
 
