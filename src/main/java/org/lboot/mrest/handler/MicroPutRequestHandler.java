@@ -8,13 +8,17 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.MicroPut;
+import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
+import org.lboot.mrest.service.ProxyContextDecorator;
 import org.lboot.mrest.service.ServiceResolution;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
@@ -59,39 +63,36 @@ public class MicroPutRequestHandler implements RequestHandler{
 
         // 添加请求头
         Map<String,Object> headers = proxyHeader(microPut.headers(),method,args);
-        // 如果请求头为空，指定 json utf8
-        Object contentType = headers.get(HttpHeaders.CONTENT_TYPE);
-        proxyBuild.buildHeaders(headers);
-        if (Validator.isEmpty(contentType)){
-            headers.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
-        }
-
-        Request.Builder requestBuilder = new Request.Builder();
-        for (Map.Entry<String, Object> entry : headers.entrySet()) {
-            requestBuilder.addHeader(entry.getKey(), entry.getValue().toString());
-        }
         // 获取请求体
         Map<String,Object> body = proxyBody(proxy,method,args);
-        proxyBuild.buildBody(body);
-
-        RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/json;charset=UTF-8"), JSONUtil.toJsonStr(body));
-        // 如果是表单
-        if (headers.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.APPLICATION_FORM_URLENCODED_VALUE)){
-            FormBody.Builder formBody = new FormBody.Builder();
-            for (Map.Entry<String, Object> entry : body.entrySet()) {
-                formBody.add(entry.getKey(), entry.getValue().toString());
+        // 获取是否存在透传装饰器 --> 如果不存在则加入，透传优先级最低
+        Decorator decorator = method.getAnnotation(Decorator.class);
+        if (Validator.isNotEmpty(decorator)){
+            ProxyContextDecorator proxyContextDecorator = decorator.value().newInstance();
+            Map<String,Object> decoratorHeader = proxyContextDecorator.readHeader();
+            for (String key:decoratorHeader.keySet()){
+                if (!headers.containsKey(key)){
+                    headers.put(key, decoratorHeader.get(key));
+                }
             }
-            requestBody = formBody.build();
+            Map<String,Object> decoratorBody = proxyContextDecorator.readBody();
+            for (String key:decoratorBody.keySet()){
+                if (!body.containsKey(key)){
+                    body.put(key,decoratorBody.get(key));
+                }
+            }
         }
-        // 获取参数列表
-        OkHttpClient client = new OkHttpClient();
-        Request request = requestBuilder
+        // 构建记录加入
+        proxyBuild.buildHeaders(headers);
+        proxyBuild.buildBody(body);
+        MicroRestClient client = new MicroRestClient()
                 .url(url)
-                .put(requestBody)
-                .build();
+                .method(HttpMethod.PUT)
+                .header(headers)
+                .body(body);
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());
-        Response response = client.newCall(request).execute();
+        Response response = client.execute();
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
         // 发布事件

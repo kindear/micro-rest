@@ -6,11 +6,11 @@ import cn.hutool.json.JSONUtil;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -138,8 +138,36 @@ public class MicroRestClient {
         for (Map.Entry<String, Object> entry : header.entrySet()) {
             requestBuilder.addHeader(entry.getKey(), entry.getValue().toString());
         }
-        // 构建请求体
         RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/json;charset=UTF-8"), JSONUtil.toJsonStr(body));
+        // 如果是表单 --> 请求头类型不为空
+        if (Validator.isNotEmpty(header.get(HttpHeaders.CONTENT_TYPE))){
+            if (header.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.APPLICATION_FORM_URLENCODED_VALUE)){
+                FormBody.Builder formBody = new FormBody.Builder();
+                for (Map.Entry<String, Object> entry : body.entrySet()) {
+                    formBody.add(entry.getKey(), entry.getValue().toString());
+                }
+                requestBody = formBody.build();
+            }else if (header.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.MULTIPART_FORM_DATA_VALUE)){
+//                MultipartBody.Builder fileBody = new MultipartBody.Builder();
+//                for (Map.Entry<String, Object> entry : body.entrySet()) {
+//                    // 获取实体文件
+//                    if (entry.getValue() instanceof MultipartFile){
+//                        fileBody.addFormDataPart()
+//                    }
+//                }
+            }
+        }
+
+        // 如果是file表单
+//        if (header.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.MULTIPART_FORM_DATA_VALUE)){
+//            MultipartBody.Builder fileBody = new MultipartBody.Builder();
+//            for (Map.Entry<String, Object> entry : body.entrySet()) {
+//                // 获取实体文件
+//                if (entry.getValue() instanceof MultipartFile){
+//                    fileBody.addFormDataPart()
+//                }
+//            }
+//        }
         // 构建请求地址
         if (Validator.isNotEmpty(query)){
             String queryUrl = HttpUtil.toParams(query);
@@ -148,7 +176,6 @@ public class MicroRestClient {
             }else {
                 this.url =  url + "?" + queryUrl;
             }
-
         }
         // 执行请求
         if (method.equals("GET")){

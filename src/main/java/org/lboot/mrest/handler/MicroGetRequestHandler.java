@@ -12,12 +12,14 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.MicroGet;
+import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ProxyContextDecorator;
 import org.lboot.mrest.service.ServiceResolution;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -75,23 +77,17 @@ public class MicroGetRequestHandler implements RequestHandler{
         }
         // 构建请求头
         proxyBuild.buildHeaders(headers);
-        // 添加请求头
-        Request.Builder requestBuilder = new Request.Builder();
-        for (Map.Entry<String, Object> entry : headers.entrySet()) {
-            requestBuilder.addHeader(entry.getKey(), entry.getValue().toString());
-        }
-        // 获取参数列表
-        OkHttpClient client = new OkHttpClient();
-        Request request = requestBuilder
+        // 构建记录加入
+        proxyBuild.buildHeaders(headers);
+        MicroRestClient client = new MicroRestClient()
                 .url(url)
-                .get()
-                .build();
+                .method(HttpMethod.GET)
+                .header(headers);
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());
-        Response response = client.newCall(request).execute();
+        Response response = client.execute();
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
-        proxyBuild.print();
         // 发布事件
         context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
         if (response.isSuccessful()) {

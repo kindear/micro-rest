@@ -19,6 +19,7 @@ import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ProxyContextDecorator;
 import org.lboot.mrest.service.ServiceResolution;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -60,6 +61,8 @@ public class MicroDeleteRequestHandler implements RequestHandler{
             url = "http://" + url;
         }
         url = proxyUrl(url,method,args);
+        // 设置请求地址
+        proxyBuild.setUrl(url);
         Map<String,Object> headers = proxyHeader(microDelete.headers(),method,args);
         // 获取是否存在透传装饰器 --> 如果不存在则加入，透传优先级最低
         Decorator decorator = method.getAnnotation(Decorator.class);
@@ -72,25 +75,15 @@ public class MicroDeleteRequestHandler implements RequestHandler{
                 }
             }
         }
+        // 构建记录加入
         proxyBuild.buildHeaders(headers);
-        // 添加请求头
-        Request.Builder requestBuilder = new Request.Builder();
-        for (Map.Entry<String, Object> entry : headers.entrySet()) {
-            requestBuilder.addHeader(entry.getKey(), entry.getValue().toString());
-        }
-        // 获取参数列表
-        OkHttpClient client = new OkHttpClient();
-//        Response response = new MicroRestClient()
-//                .url(url)
-//                .header(headers)
-//                .execute();
-        Request request = requestBuilder
+        MicroRestClient client = new MicroRestClient()
                 .url(url)
-                .delete()
-                .build();
+                .method(HttpMethod.DELETE)
+                .header(headers);
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());
-        Response response = client.newCall(request).execute();
+        Response response = client.execute();
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
         // 发布事件

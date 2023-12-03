@@ -12,11 +12,13 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.Delete;
+import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ProxyContextDecorator;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -45,6 +47,8 @@ public class DeleteRequestHandler implements RequestHandler{
             url = delete.url();
         }
         url = proxyUrl(url,method,args);
+        // 构建请丢地址
+        proxyBuild.setUrl(url);
         // 构建请求头
         Map<String,Object> headers = proxyHeader(delete.headers(),method,args);
         // 获取是否存在透传装饰器 --> 如果不存在则加入，透传优先级最低
@@ -58,21 +62,15 @@ public class DeleteRequestHandler implements RequestHandler{
                 }
             }
         }
+        // 构建记录加入
         proxyBuild.buildHeaders(headers);
-        // 添加请求头
-        Request.Builder requestBuilder = new Request.Builder();
-        for (Map.Entry<String, Object> entry : headers.entrySet()) {
-            requestBuilder.addHeader(entry.getKey(), entry.getValue().toString());
-        }
-        // 获取参数列表
-        OkHttpClient client = new OkHttpClient();
-        Request request = requestBuilder
+        MicroRestClient client = new MicroRestClient()
                 .url(url)
-                .delete()
-                .build();
+                .method(HttpMethod.DELETE)
+                .header(headers);
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());
-        Response response = client.newCall(request).execute();
+        Response response = client.execute();
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
         // 发布事件

@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.MicroPost;
+import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
@@ -17,6 +18,7 @@ import org.lboot.mrest.service.ProxyContextDecorator;
 import org.lboot.mrest.service.ServiceResolution;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
@@ -63,12 +65,6 @@ public class MicroPostRequestHandler implements RequestHandler{
 
         // 添加请求头
         Map<String,Object> headers = proxyHeader(microPost.headers(),method,args);
-        // 如果请求头为空，指定 json utf8
-        Object contentType = headers.get(HttpHeaders.CONTENT_TYPE);
-        if (Validator.isEmpty(contentType)){
-            headers.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
-        }
-
         // 获取请求体
         Map<String,Object> body = proxyBody(proxy,method,args);
 
@@ -90,34 +86,17 @@ public class MicroPostRequestHandler implements RequestHandler{
             }
         }
 
-        Request.Builder requestBuilder = new Request.Builder();
-        for (Map.Entry<String, Object> entry : headers.entrySet()) {
-            requestBuilder.addHeader(entry.getKey(), entry.getValue().toString());
-        }
+        // 构建记录加入
         proxyBuild.buildHeaders(headers);
         proxyBuild.buildBody(body);
-        RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/json;charset=UTF-8"), JSONUtil.toJsonStr(body));
-        // 如果是表单
-        if (headers.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.APPLICATION_FORM_URLENCODED_VALUE)){
-            FormBody.Builder formBody = new FormBody.Builder();
-            for (Map.Entry<String, Object> entry : body.entrySet()) {
-                formBody.add(entry.getKey(), entry.getValue().toString());
-            }
-            requestBody = formBody.build();
-        }
-        // 如果是表单
-        if (headers.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.MULTIPART_FORM_DATA_VALUE)){
-
-        }
-        // 获取参数列表
-        OkHttpClient client = new OkHttpClient();
-        Request request = requestBuilder
+        MicroRestClient client = new MicroRestClient()
                 .url(url)
-                .post(requestBody)
-                .build();
+                .method(HttpMethod.POST)
+                .header(headers)
+                .body(body);
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());
-        Response response = client.newCall(request).execute();
+        Response response = client.execute();
         // 记录接口执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
         // 发布事件

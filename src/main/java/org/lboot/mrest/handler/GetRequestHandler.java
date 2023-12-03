@@ -16,6 +16,7 @@ import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ProxyContextDecorator;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -63,14 +64,13 @@ public class GetRequestHandler implements RequestHandler{
         proxyBuild.buildHeaders(headers);
         MicroRestClient client = new MicroRestClient()
                 .url(url)
+                .method(HttpMethod.GET)
                 .header(headers);
         // 记录接口构建时间
         proxyBuild.setProxyRequestCost(timer.intervalRestart());
         Response response = client.execute();
         // 记录执行时间
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
-        // 打印日志
-        proxyBuild.print();
         // 发布事件
         context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
         if (response.isSuccessful()) {
