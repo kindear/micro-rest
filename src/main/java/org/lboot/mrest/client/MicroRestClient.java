@@ -9,10 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.FileNameMap;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -119,7 +121,16 @@ public class MicroRestClient {
 
     }
 
-
+    /**
+     * 推测 MediaType
+     * @param file
+     * @return
+     */
+    private static MediaType getMediaType(File file) {
+        FileNameMap fileNameMap = URLConnection.getFileNameMap();
+        String contentType = fileNameMap.getContentTypeFor(file.getName());
+        return MediaType.parse(contentType);
+    }
     /**
      * 接口定义执行
      * @return
@@ -141,14 +152,24 @@ public class MicroRestClient {
         RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/json;charset=UTF-8"), JSONUtil.toJsonStr(body));
         // 如果是表单 --> 请求头类型不为空
         if (Validator.isNotEmpty(header.get(HttpHeaders.CONTENT_TYPE))){
-            if (header.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.APPLICATION_FORM_URLENCODED_VALUE)){
+            String contentType = header.get(HttpHeaders.CONTENT_TYPE).toString();
+            if (contentType.startsWith("application/x-www-form-urlencoded")){
                 FormBody.Builder formBody = new FormBody.Builder();
                 for (Map.Entry<String, Object> entry : body.entrySet()) {
                     formBody.add(entry.getKey(), entry.getValue().toString());
                 }
                 requestBody = formBody.build();
-            }else if (header.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.MULTIPART_FORM_DATA_VALUE)){
-//                MultipartBody.Builder fileBody = new MultipartBody.Builder();
+            }else if (contentType.startsWith("multipart/form-data")){
+                // 获取文件信息
+                if (body.get("file") instanceof File){
+
+                }
+                File file = (File) body.get("file");
+
+                MultipartBody.Builder builder = new MultipartBody.Builder();
+                builder.addFormDataPart("imageFile", file.getName(),
+                        RequestBody.create(MediaType.parse("application/octet-stream"), file));
+
 //                for (Map.Entry<String, Object> entry : body.entrySet()) {
 //                    // 获取实体文件
 //                    if (entry.getValue() instanceof MultipartFile){
