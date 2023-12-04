@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,34 +160,21 @@ public class MicroRestClient {
                 requestBody = formBody.build();
             }else if (contentType.startsWith("multipart/form-data")){
                 // 获取文件信息
-                if (body.get("file") instanceof File){
-
-                }
-                File file = (File) body.get("file");
-
                 MultipartBody.Builder builder = new MultipartBody.Builder();
-                builder.addFormDataPart("imageFile", file.getName(),
-                        RequestBody.create(MediaType.parse("application/octet-stream"), file));
+                for (Map.Entry<String, Object> entry : body.entrySet()) {
+                    if (entry.getValue() instanceof File){
+                        File file = (File) entry.getValue();
+                        builder.addFormDataPart(entry.getKey(), file.getName(),
+                                RequestBody.create(MediaType.parse("application/octet-stream"), file));
+                    }else {
+                        // 构建非 File 参数
+                        builder.addFormDataPart(entry.getKey(),entry.getValue().toString());
+                    }
+                }
+                requestBody = builder.build();
 
-//                for (Map.Entry<String, Object> entry : body.entrySet()) {
-//                    // 获取实体文件
-//                    if (entry.getValue() instanceof MultipartFile){
-//                        fileBody.addFormDataPart()
-//                    }
-//                }
             }
         }
-
-        // 如果是file表单
-//        if (header.get(HttpHeaders.CONTENT_TYPE).equals(MediaType.MULTIPART_FORM_DATA_VALUE)){
-//            MultipartBody.Builder fileBody = new MultipartBody.Builder();
-//            for (Map.Entry<String, Object> entry : body.entrySet()) {
-//                // 获取实体文件
-//                if (entry.getValue() instanceof MultipartFile){
-//                    fileBody.addFormDataPart()
-//                }
-//            }
-//        }
         // 构建请求地址
         if (Validator.isNotEmpty(query)){
             String queryUrl = HttpUtil.toParams(query);
