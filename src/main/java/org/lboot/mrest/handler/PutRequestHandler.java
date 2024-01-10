@@ -48,7 +48,7 @@ public class PutRequestHandler implements RequestHandler{
             url = put.url();
         }
         url = proxyUrl(url,method,args);
-
+        proxyBuild.setUrl(url);
         // 添加请求头
         Map<String,Object> headers = proxyHeader(put.headers(),method,args);
         // 获取请求体

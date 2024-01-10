@@ -48,7 +48,7 @@ public class PostRequestHandler implements RequestHandler{
             url = post.url();
         }
         url = proxyUrl(url,method,args);
-
+        proxyBuild.setUrl(url);
         // 添加请求头
         Map<String,Object> headers = proxyHeader(post.headers(),method,args);
 

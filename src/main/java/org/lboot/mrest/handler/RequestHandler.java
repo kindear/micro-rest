@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
  * 参考请求头常量类 HttpHeaders.ACCEPT etc..
  * 请求头值 MediaType.APP..
  */
+
 public interface RequestHandler {
 
     /**
@@ -194,6 +195,7 @@ public interface RequestHandler {
         }
     }
     public static boolean isCustomClass(Class<?> clazz) {
+
         // 检查类是否不是Java标准库或第三方库的类
         return !clazz.getName().startsWith("java.") && !clazz.getName().startsWith("javax.");
     }
@@ -221,7 +223,7 @@ public interface RequestHandler {
         while (matcher.find()) {
             String replaceText = matcher.group(0);
             String replaceKey = matcher.group(1);
-//            log.info(replaceText +"|"+ replaceKey);
+            // System.out.println(replaceText +"|"+ replaceKey);
             resultStr = resultStr.replace(replaceText, props.getProperty(replaceKey));
         }
         return resultStr;
@@ -252,16 +254,16 @@ public interface RequestHandler {
             Parameter parameter = parameters[i];
             Headers headerAnno = parameter.getAnnotation(Headers.class);
             if (Validator.isNotEmpty(headerAnno)){
-                // 如果为空且Bean
-                if (headerAnno.value().isEmpty() && isCustomClass(args[i].getClass())){
-                    Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
-                    for (String key: beanMap.keySet()){
-                        if (!headerMap.containsKey(key)){
-                            headerMap.put(key,beanMap.get(key));
+                if (headerAnno.value().isEmpty()){
+                    if (isCustomClass(args[i].getClass()) || args[i] instanceof Map){
+                        Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
+                        for (String key: beanMap.keySet()){
+                            if (!headerMap.containsKey(key)){
+                                headerMap.put(key,beanMap.get(key));
+                            }
                         }
                     }
                 }else {
-                    // 基础变量类型
                     if (!isCustomClass(args[i].getClass())){
                         headerMap.put(headerAnno.value(),args[i]);
                     }

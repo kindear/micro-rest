@@ -60,7 +60,7 @@ public class MicroPutRequestHandler implements RequestHandler{
             url = "http://" + url;
         }
         url = proxyUrl(url,method,args);
-
+        proxyBuild.setUrl(url);
         // 添加请求头
         Map<String,Object> headers = proxyHeader(microPut.headers(),method,args);
         // 获取请求体

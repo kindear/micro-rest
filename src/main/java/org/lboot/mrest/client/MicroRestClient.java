@@ -7,9 +7,13 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import okhttp3.sse.EventSource;
+import okhttp3.sse.EventSourceListener;
+import okhttp3.sse.EventSources;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.FileNameMap;
@@ -18,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author kindear
@@ -141,8 +146,16 @@ public class MicroRestClient {
             log.error("接口构建错误，无法执行");
             return null;
         }
+
         // 请求客户端
         OkHttpClient client = new OkHttpClient();
+//        OkHttpClient client = new OkHttpClient.Builder()
+//                .connectTimeout(10, TimeUnit.SECONDS)
+//                .writeTimeout(50, TimeUnit.SECONDS)
+//                .readTimeout(10, TimeUnit.MINUTES)
+//                .build();
+
+
         // 如果设置了 url 则不使用 serviceName 查询
         Request.Builder requestBuilder = new Request.Builder();
         for (Map.Entry<String, Object> entry : header.entrySet()) {
@@ -232,12 +245,27 @@ public class MicroRestClient {
         return null;
     }
 
+
+
     public static void main(String[] args) throws IOException {
        // MicroRestClient client = new MicroRestClient().method(HttpMethod.GET).url("http://localhost:8080").addQuery("name","kindear");
 
         Response response = new MicroRestClient().method(HttpMethod.GET).url("https://jsonplaceholder.typicode.com/posts/2").execute();
         log.info(response.body().string());
+//        HashMap<String, Object> map = new HashMap<>();
+//        map.put("prompt","哈喽，你好");
+//        map.put("history", Arrays.asList());
+//        map.put("temperature",0.9);
+//        map.put("top_p",0.7);
+//        map.put("max_new_tokens",4096);
+//        Map<String,Object> headers = new HashMap<>();
+//        headers.put("Authorization","Bearer " + "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");
+//        Response response = new MicroRestClient()
+//                .url("https://api.openai-proxy.com/v1/chat/completions")
+//                .body(map)
+//                .header(headers)
+//                .method(HttpMethod.POST)
+//                .execute();
 
-        //log.info(client.toString());
     }
 }

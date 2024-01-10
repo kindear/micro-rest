@@ -62,7 +62,8 @@ public class MicroPostRequestHandler implements RequestHandler{
             url = "http://" + url;
         }
         url = proxyUrl(url,method,args);
-
+        // 存储请求地址
+        proxyBuild.setUrl(url);
         // 添加请求头
         Map<String,Object> headers = proxyHeader(microPost.headers(),method,args);
         // 获取请求体
@@ -89,6 +90,7 @@ public class MicroPostRequestHandler implements RequestHandler{
         // 构建记录加入
         proxyBuild.buildHeaders(headers);
         proxyBuild.buildBody(body);
+        log.info(headers.toString());
         MicroRestClient client = new MicroRestClient()
                 .url(url)
                 .method(HttpMethod.POST)
