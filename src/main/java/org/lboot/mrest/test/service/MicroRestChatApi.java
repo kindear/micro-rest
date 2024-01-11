@@ -3,12 +3,10 @@ package org.lboot.mrest.test.service;
 
 import com.lucy.chat.params.chat.ChatParams;
 import com.lucy.chat.params.chat.ChatResult;
-import org.lboot.mrest.annotation.Body;
-import org.lboot.mrest.annotation.Headers;
-import org.lboot.mrest.annotation.MicroRest;
-import org.lboot.mrest.annotation.Post;
+import org.lboot.mrest.annotation.*;
 
 import java.util.Map;
+
 
 @MicroRest
 public interface MicroRestChatApi {

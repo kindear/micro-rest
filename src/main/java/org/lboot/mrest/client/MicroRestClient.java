@@ -7,13 +7,8 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import okhttp3.sse.EventSource;
-import okhttp3.sse.EventSourceListener;
-import okhttp3.sse.EventSources;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.FileNameMap;
@@ -44,7 +39,15 @@ public class MicroRestClient {
 
     Map<String,Object> body = new HashMap<>();
 
+    private boolean sse = false;
+
     private boolean ok = true;
+
+    // 开启SSE模式
+    public MicroRestClient sse(){
+        this.sse = true;
+        return this;
+    }
 
     public MicroRestClient header(Map<String,Object> header){
         // 如果不为空
@@ -135,25 +138,17 @@ public class MicroRestClient {
         String contentType = fileNameMap.getContentTypeFor(file.getName());
         return MediaType.parse(contentType);
     }
+
     /**
-     * 接口定义执行
+     * 获取请求信息
      * @return
      */
     @SneakyThrows
-    public Response execute(){
-        //log.info(toString());
+    public Request getRequest(){
         if(!ok){
             log.error("接口构建错误，无法执行");
             return null;
         }
-
-        // 请求客户端
-        OkHttpClient client = new OkHttpClient();
-//        OkHttpClient client = new OkHttpClient.Builder()
-//                .connectTimeout(10, TimeUnit.SECONDS)
-//                .writeTimeout(50, TimeUnit.SECONDS)
-//                .readTimeout(10, TimeUnit.MINUTES)
-//                .build();
 
 
         // 如果设置了 url 则不使用 serviceName 查询
@@ -203,28 +198,28 @@ public class MicroRestClient {
                     .url(url)
                     .get()
                     .build();
-            return client.newCall(request).execute();
+            return request;
         }
         if (method.equals("POST")){
             Request request = requestBuilder
                     .url(url)
                     .post(requestBody)
                     .build();
-            return client.newCall(request).execute();
+            return request;
         }
         if (method.equals("DELETE")){
             Request request = requestBuilder
                     .url(url)
                     .delete()
                     .build();
-            return client.newCall(request).execute();
+            return request;
         }
         if (method.equals("PUT")){
             Request request = requestBuilder
                     .url(url)
                     .put(requestBody)
                     .build();
-            return client.newCall(request).execute();
+            return request;
         }
 
         if (method.equals("PATCH")){
@@ -232,40 +227,46 @@ public class MicroRestClient {
                     .url(url)
                     .patch(requestBody)
                     .build();
-            return client.newCall(request).execute();
+            return request;
         }
         if (method.equals("HEAD") || method.equals("OPTIONS")){
             Request request = requestBuilder
                     .url(url)
                     .head()
                     .build();
-            return client.newCall(request).execute();
+            return request;
         }
-        log.error("请求条件匹配出错");
+        log.error("构建错误，无匹配构建模式");
         return null;
     }
+    /**
+     * 接口定义执行
+     * @return
+     */
+    @SneakyThrows
+    public Response execute(){
+        // 请求客户端
+        if (sse){
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .writeTimeout(50, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.MINUTES)
+                    .build();
+            return client.newCall(getRequest()).execute();
+        }else {
+            OkHttpClient client = new OkHttpClient();
+            return client.newCall(getRequest()).execute();
+        }
+        //log.info(toString());
 
-
+    }
 
     public static void main(String[] args) throws IOException {
        // MicroRestClient client = new MicroRestClient().method(HttpMethod.GET).url("http://localhost:8080").addQuery("name","kindear");
 
-        Response response = new MicroRestClient().method(HttpMethod.GET).url("https://jsonplaceholder.typicode.com/posts/2").execute();
-        log.info(response.body().string());
-//        HashMap<String, Object> map = new HashMap<>();
-//        map.put("prompt","哈喽，你好");
-//        map.put("history", Arrays.asList());
-//        map.put("temperature",0.9);
-//        map.put("top_p",0.7);
-//        map.put("max_new_tokens",4096);
-//        Map<String,Object> headers = new HashMap<>();
-//        headers.put("Authorization","Bearer " + "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");
-//        Response response = new MicroRestClient()
-//                .url("https://api.openai-proxy.com/v1/chat/completions")
-//                .body(map)
-//                .header(headers)
-//                .method(HttpMethod.POST)
-//                .execute();
+//        Response response = new MicroRestClient().method(HttpMethod.GET).url("https://jsonplaceholder.typicode.com/posts/2").execute();
+//        log.info(response.body().string());
+
 
     }
 }

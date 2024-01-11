@@ -75,12 +75,6 @@
             <artifactId>okhttp</artifactId>
             <version>3.12.10</version>
         </dependency>
-        <!--okhttp3-sse-->
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp-sse</artifactId>
-            <version>3.12.10</version>
-        </dependency>
         <!--hu-tool-->
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -119,35 +113,11 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <build>
-        <resources>
-            <resource>
-                <filtering>true</filtering>
-                <directory>src/main/resources</directory>
-            </resource>
-        </resources>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <compilerArgs>
-                        <arg>-parameters</arg>
-                    </compilerArgs>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 <!--    <build>-->
 <!--        <resources>-->
 <!--            <resource>-->
 <!--                <filtering>true</filtering>-->
 <!--                <directory>src/main/resources</directory>-->
-<!--                <excludes>-->
-<!--                    <exclude>**/application.properties</exclude>-->
-<!--                    <exclude>**/env.properties</exclude>-->
-<!--                </excludes>-->
 <!--            </resource>-->
 <!--        </resources>-->
 <!--        <plugins>-->
@@ -159,13 +129,37 @@
 <!--                    <compilerArgs>-->
 <!--                        <arg>-parameters</arg>-->
 <!--                    </compilerArgs>-->
-<!--                    <excludes>-->
-<!--                        &lt;!&ndash; 去除指定的包，及其包下的类&ndash;&gt;-->
-<!--                        <exclude>**/test/**</exclude>-->
-<!--                        <exclude>**/MicroRestApplication.java</exclude>-->
-<!--                    </excludes>-->
 <!--                </configuration>-->
 <!--            </plugin>-->
 <!--        </plugins>-->
 <!--    </build>-->
+    <build>
+        <resources>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>**/application.properties</exclude>
+                    <exclude>**/env.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                    <excludes>
+                        <!-- 去除指定的包，及其包下的类-->
+                        <exclude>**/test/**</exclude>
+                        <exclude>**/MicroRestApplication.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
