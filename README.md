@@ -1,6 +1,6 @@
 # MicroRest
 
-`MircoRest`是一款基于`okhttp`构建的 `http`客户端请求框架，优雅适配了微服务请求，它能够将 HTTP 的所有请求信息（包括 URL、Header 以及 Body 等信息）绑定到您自定义的 Interface 方法上，支持上下文穿透、请求参数动态修改，能够通过调用本地接口方法的方式发送 HTTP 请求。
+`MircoRest`是一款基于`okhttp`构建的 `http`客户端请求框架，优雅适配了微服务请求，它能够将 HTTP 的所有请求信息（包括 URL、Header 以及 Body 等信息）绑定到您自定义的 Interface 方法上，支持上下文穿透、请求参数动态修改，SSE请求支持，能够通过调用本地接口方法的方式发送 HTTP 请求。
 
 其设计思想基于动态代理。
 
@@ -12,6 +12,8 @@
 
 - [x] 微服务请求支持，`@MicroGet` `@MicroPost` `@MicroPut` `@MicroDelete` 支持，默认支持 `NacOS`，支持自定义拓展
 
+- [x] `SSE`请求支持，`@SseGet` `@SsePost`支持，类`GPT`请求实现转发
+
 - [x] 请求参数自定义，`@PathVar` 自定义路径参数 , `@Query` 自定义查询参数
 
 - [x] 请求头自定义 ，`@Headers` 请求头支持
@@ -20,7 +22,7 @@
 
 - [x] 自定义请求客户端 `MicroRestClient`
 
-- [ ] 
+- [x] 支持装饰器模式 ，传递请求头和请求体
 
   
 
@@ -136,6 +138,29 @@ public interface TestPostApi {
 
 
 
+#### #{}
+
+> 模板内容替换
+
+目前仅支持读取`application.properties`配置文件中的配置项的值，并实现替换 
+
+> application.properties
+
+```
+openai.chat.host=https://api.openai-proxy.com
+```
+
+
+
+```java
+@MicroRest
+public interface MicroRestChatApi {
+    @SsePost(value = "#{openai.chat.host}/v1/chat/completions", converter = ChatConverter.class)
+    StreamResponse chatCompletions(@Headers Map<String, Object> headers, @Body Map<String,Object> params);
+
+}
+```
+
 
 
 ### 请求头构建
@@ -235,11 +260,157 @@ public interface TestPostApi {
 
 
 
+### 请求透传
+
+#### @Decorator
+
+> 请求透传
+
+被该注解标记的方法，会根据配置属性，自动读取请求上下文中的请求头和请求体
+
+```java
+@Target({ElementType.METHOD,ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Decorator {
+    // 是否读取请求头
+    boolean withHeader() default true;
+    
+    // 是否读取请求体
+    boolean withBody() default true;
+    
+    // 装饰器默认实现 --> 请求头和请求体读取,支持自定义
+    Class<? extends ProxyContextDecorator> value() default DefaultProxyContextDecorator.class;
+}
+```
+
+
+
+> 默认实现
+
+```java
+public abstract class ProxyContextDecorator {
+    public Map<String,Object> readHeader(){
+        HashMap<String,Object> header = new HashMap<>();
+        HttpServletRequest request =((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()){
+            String headerName = headerNames.nextElement();
+            header.put(headerName,request.getHeader(headerName));
+        }
+        return header;
+    }
+    public Map<String,Object> readBody(){
+        HashMap<String,Object> body = new HashMap<>();
+        HttpServletRequest request =((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+        Enumeration<String> bodyNames = request.getParameterNames();
+        while (bodyNames.hasMoreElements()){
+            String paramKey = bodyNames.nextElement();
+            body.put(paramKey,request.getParameter(paramKey));
+        }
+        return body;
+    }
+}
+```
+
+自定义实现需要基础该抽象类并重写
+
+
+
+
+
+### REST请求支持
+
+
+
+#### @Post
+
+> 作用域：方法
+
+#### @Put
+
+> 作用域：方法
+
+#### @Get
+
+> 作用域：方法
+
+#### @Delete
+
+> 作用域：方法
+
+#### 注解属性
+
+上述注解注解属性一致：
+
+```java
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface XXX {
+    @AliasFor("url")
+    String value() default "";
+
+    @AliasFor("value")
+    String url() default "";
+	// 默认请求头配置
+    String[] headers() default {};
+
+}
+```
+
+
+
+
+
 ### 微服务请求支持
+
+#### @MicroPost
+
+> 作用域：方法
+
+#### @MicroPut
+
+> 作用域：方法
+
+#### @MicroGet
+
+> 作用域：方法
+
+#### @MicroDelete
+
+> 作用域：方法
+
+#### 注解属性
+
+上述注解属性项一致
+
+```java
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface MicroXXX {
+    // 分组名称，不传递则为默认分组
+    String groupName() default "";
+    // 微服务名称
+    String serviceName() default "";
+
+    // 请求路径
+    String path() default "";
+
+    // 请求头信息
+    String[] headers() default {};
+
+}
+```
+
+
+
+
 
 #### 基础使用
 
-基于`OpenApi`实现了对`NacOS`微服务请求的支持，指定服务名称，构建请求时，会自动将服务名称置换为对应的请求地址
+项目已经基于`OpenApi`实现了对`NacOS`微服务请求的支持，指定服务名称，构建请求时，会自动将服务名称置换为对应的请求地址
 
 ```java
 @MicroRest
@@ -263,9 +434,89 @@ public interface AuthApi {
 
 
 
+### SSE请求支持
+
+`MicroRest`实现了对`SSE`请求的支持，限制返回类型必须为`StreamResponse`
+
+[一文读懂即时更新方案：SSE - 掘金 (juejin.cn)](https://juejin.cn/post/7221125237500330039)
+
+以`ChatGPT`请求转发为例
+
+```java
+@MicroRest
+public interface MicroRestChatApi {
+    @SsePost(value = "#{openai.chat.host}/v1/chat/completions", converter = ChatConverter.class)
+    StreamResponse chatCompletions(@Headers Map<String, Object> headers, @Body Map<String,Object> params);
+
+}
+```
+
+> Controller 写法
+
+```java
+MicroRestChatApi microRestChatApi;
+@GetMapping(value = "stream/chat/{chatId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+@ApiOperation(value = "流聊天")
+@SneakyThrows
+public StreamResponse doStreamChat(@PathVariable("chatId") String chatId){
+     // 构建请求头和请求体
+     return microRestChatApi.chatCompletions(headers, paramMap);
+}
+```
+
+#### @SsePost
+
+> 作用域： 方法
+
+#### @SseGet
+
+> 作用域：方法
+
+#### 注解属性
+
+```java
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface SseXXX {
+    @AliasFor("url")
+    String value() default "";
+
+    @AliasFor("value")
+    String url() default "";
+
+    String[] headers() default {};
+
+    // 终止信号
+    String signal() default "DONE";
+    
+    // 信息类型转换默认实现类
+    Class<? extends SseMessageConverter> converter() default DefaultSseMessageConverter.class;
+
+}
+```
+
+#### @SseSocketId
+
+类似 `@PathVar`用法，不需要指定内部参数
+
+> 作用域：参数
+
+`SSE`请求需要指定信道ID，如果没有指定则自动构建随机信道ID
+
+```java
+@MicroRest
+public interface MicroRestChatApi {
+    @SsePost(value = "#{openai.chat.host}/v1/chat/completions", converter = ChatConverter.class)
+    StreamResponse chatCompletions(@Headers Map<String, Object> headers, @Body Map<String,Object> params, @SseSocketId String socketId);
+}
+```
+
+
+
 ### 请求客户端
 
-基于`okhttp`构建请求比较复杂，基于`okhttp`封装`MircoRestClient`，可以非常方便的构建请求。
+基于`okhttp`构建请求比较复杂，基于`okhttp`封装`MircoRestClient`，可以非常方便的构建请求，实现用户自己的自定义请求。
 
 用法举例:
 
@@ -282,19 +533,21 @@ ResponseBody responseBody = response.body();
 
 支持方法:
 
-| 方法                              | 备注         | 返回结果         |
-| --------------------------------- | ------------ | ---------------- |
-| header(Map<String,Object> header) | 设置请求头   | MicroRestClient  |
-| addHeader(String key, Object val) | 设置请求头   | MicroRestClient  |
-| body(Map<String,Object> body)     | 设置请求体   | MicroRestClient  |
-| addBody(String key, Object val)   | 设置请求体   | MicroRestClient  |
-| query(Map<String,Object> query)   | 设置请求参数 | MicroRestClient  |
-| addQuery(String key, Object val)  | 设置请求参数 | MicroRestClient  |
-| method(HttpMethod httpMethod)     | 设置请求方法 | MicroRestClient  |
-| method(String method)             | 设置请求方法 | MicroRestClient  |
-| url(String url)                   | 设置请求地址 | MicroRestClient  |
-| execute()                         | 请求执行     | Response:okhttp3 |
-|                                   |              |                  |
+| 方法                              | 备注             | 返回结果         |
+| --------------------------------- | ---------------- | ---------------- |
+| header(Map<String,Object> header) | 设置请求头       | MicroRestClient  |
+| addHeader(String key, Object val) | 设置请求头       | MicroRestClient  |
+| body(Map<String,Object> body)     | 设置请求体       | MicroRestClient  |
+| addBody(String key, Object val)   | 设置请求体       | MicroRestClient  |
+| query(Map<String,Object> query)   | 设置请求参数     | MicroRestClient  |
+| addQuery(String key, Object val)  | 设置请求参数     | MicroRestClient  |
+| method(HttpMethod httpMethod)     | 设置请求方法     | MicroRestClient  |
+| method(String method)             | 设置请求方法     | MicroRestClient  |
+| url(String url)                   | 设置请求地址     | MicroRestClient  |
+| sse()                             | 设置开启`SSE`    | MicroRestClient  |
+| execute()                         | 请求执行         | Response:okhttp3 |
+| getRequest()                      | 获取当前请求信息 | Request:okhttp3  |
+|                                   |                  |                  |
 
 
 

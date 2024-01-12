@@ -93,7 +93,7 @@ public class ChatTestController {
 //                .body(paramMap)
 //                .sse()
 //                .method(HttpMethod.POST)
-//                .addHeader("Authorization","Bearer " + "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")
+//                .addHeader("Authorization","Bearer " + "sk-")
 //                .execute();
 //
 //        sseService.proxy(chatId, response, "[DONE]");
@@ -119,17 +119,6 @@ public class ChatTestController {
         headers.put("Authorization","Bearer " + "sk-");
 
         return microRestChatApi.chatCompletions(headers, paramMap);
-
-//        Response response = client.newCall(request).execute();
-//        Response response = new MicroRestClient()
-//                .url("https://api.openai-proxy.com/v1/chat/completions")
-//                .body(paramMap)
-//                .sse()
-//                .method(HttpMethod.POST)
-//                .addHeader("Authorization","Bearer " + "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")
-//                .execute();
-//
-//        sseService.proxy(chatId, response, "[DONE]");
     }
 
 

@@ -6,10 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.lboot.mrest.service.SseMessageConverter;
 
 @Slf4j
-public class ChatConverter implements SseMessageConverter {
+public class ChatConverter extends SseMessageConverter {
     @Override
     public String convert(String jsonStr) {
         ChatResult chatResult = JSONUtil.toBean(jsonStr, ChatResult.class);
        return jsonStr;
     }
+
+
 }

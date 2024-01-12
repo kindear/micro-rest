@@ -4,6 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.lboot.mrest.service.SseMessageConverter;
 
 @Slf4j
-public class DefaultSseMessageConverter implements SseMessageConverter {
+public class DefaultSseMessageConverter extends SseMessageConverter {
+    @Override
+    public String convert(String jsonStr) {
+        return super.convert(jsonStr);
+    }
 
+    @Override
+    public String convert(Object obj) {
+        return super.convert(obj);
+    }
 }
