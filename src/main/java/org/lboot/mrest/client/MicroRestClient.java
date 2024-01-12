@@ -7,8 +7,12 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.FileNameMap;
@@ -39,9 +43,9 @@ public class MicroRestClient {
 
     Map<String,Object> body = new HashMap<>();
 
-    private boolean sse = false;
-
     private boolean ok = true;
+
+    private boolean sse = false;
 
     // 开启SSE模式
     public MicroRestClient sse(){
@@ -245,21 +249,49 @@ public class MicroRestClient {
      */
     @SneakyThrows
     public Response execute(){
+
         // 请求客户端
+        OkHttpClient client = new OkHttpClient();
+        // 如果是SSE,则配置超时时间
         if (sse){
-            OkHttpClient client = new OkHttpClient.Builder()
+            client = new OkHttpClient.Builder()
                     .connectTimeout(10, TimeUnit.SECONDS)
                     .writeTimeout(50, TimeUnit.SECONDS)
                     .readTimeout(10, TimeUnit.MINUTES)
                     .build();
-            return client.newCall(getRequest()).execute();
-        }else {
-            OkHttpClient client = new OkHttpClient();
-            return client.newCall(getRequest()).execute();
         }
-        //log.info(toString());
+        return client.newCall(getRequest()).execute();
 
     }
+//    @SneakyThrows
+//    @Async
+//    public void buildSSE(SseEmitter sseEmitter, Response response, String signal){
+//        String line;
+//        if (response.isSuccessful()){
+//            log.info("请求成功");
+//        }else {
+//            log.info(response.message());
+//            log.info(response.body().string());
+//        }
+//        while ((line = response.body().source().readUtf8Line()) != null) {
+//            if (line.contains(signal)) {
+//                log.info("请求终止信号:{}", line);
+//
+//                log.info(response.body().string());
+//                response.close();
+//                log.info("请求关闭");
+//                sseEmitter.complete();
+//                break;
+//            } else if (line.startsWith("data: ")) {
+//                line = line.substring(6);
+//                sseEmitter.send(line, org.springframework.http.MediaType.APPLICATION_JSON);
+//                JSONObject responseJson = new JSONObject(line);
+//                if (responseJson.getJSONArray("choices").getJSONObject(0).getJSONObject("delta").has("content")) {
+//                    System.out.print(responseJson.getJSONArray("choices").getJSONObject(0).getJSONObject("delta").getString("content"));
+//                }
+//            }
+//        }
+//    }
 
     public static void main(String[] args) throws IOException {
        // MicroRestClient client = new MicroRestClient().method(HttpMethod.GET).url("http://localhost:8080").addQuery("name","kindear");

@@ -127,6 +127,31 @@ public interface RequestHandler {
         return bodyMap;
     }
 
+    /**
+     * 获取信道ID
+     * @param method 方法
+     * @param args 参数列表
+     * @return 信道ID
+     */
+    default String proxySocketId(Method method, Object[] args){
+        Parameter[] parameters = method.getParameters();
+        String socketId = null;
+        // 获取信道ID
+        for (int i = 0; i < parameters.length; i++){
+            // 获取部分基础信息
+            Class<?> clazz = args[i].getClass();
+            boolean isCustom = isCustomClass(clazz);
+            Parameter parameter = parameters[i];
+            // 信道ID注解
+            SseSocketId sseSocketId = parameter.getAnnotation(SseSocketId.class);
+            if (Validator.isNotEmpty(sseSocketId) && !isCustomClass(clazz)){
+                socketId =  (String) args[i];
+                break;
+            }
+        }
+        return socketId;
+    }
+
 
     /**
      * 请求参数构建方法
@@ -201,6 +226,7 @@ public interface RequestHandler {
     }
 
     /**
+     * @tips 只适用于 properties 类型配置文件
      * 读取配置文件替换模板内容
      * @param str
      * @return

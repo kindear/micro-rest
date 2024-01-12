@@ -35,6 +35,10 @@ public class MicroRestProxy extends AbstractInvocationDispatcher<ProxyStub, Void
 
     MicroGetRequestHandler microGetRequestHandler;
 
+    SseGetRequestHandler sseGetRequestHandler;
+
+    SsePostRequestHandler ssePostRequestHandler;
+
     @Override
     protected Object invoke(StubProxyContext<ProxyStub> stubProxyContext, Object proxy, Method method, Object[] args) throws Throwable {
         // Class<?> clazz = proxy.getClass();
@@ -70,6 +74,14 @@ public class MicroRestProxy extends AbstractInvocationDispatcher<ProxyStub, Void
         MicroDelete microDelete = method.getAnnotation(MicroDelete.class);
         if (microDelete != null){
             return microDeleteRequestHandler.handler(proxy,method,args);
+        }
+        SseGet sseGet = method.getAnnotation(SseGet.class);
+        if (sseGet != null){
+            return sseGetRequestHandler.handler(proxy, method, args);
+        }
+        SsePost ssePost = method.getAnnotation(SsePost.class);
+        if (ssePost != null){
+            return ssePostRequestHandler.handler(proxy,method,args);
         }
         return getRequestHandler.handler(proxy,method,args);
     }
