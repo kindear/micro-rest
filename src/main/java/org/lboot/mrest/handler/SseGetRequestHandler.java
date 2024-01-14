@@ -89,7 +89,7 @@ public class SseGetRequestHandler implements RequestHandler{
         // 获取SSE
         StreamResponse sseEmitter = sseService.connect(socketId);
         if (response.isSuccessful()){
-            sseService.proxy(socketId, response, signal);
+            sseService.proxy(socketId, response, signal, get.converter().newInstance());
             return sseEmitter;
         }else {
             String message = null;

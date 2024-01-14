@@ -7,12 +7,14 @@ import okhttp3.Response;
 import org.lboot.mrest.domain.StreamResponse;
 import org.lboot.mrest.service.SseMessageConverter;
 import org.lboot.mrest.service.SseService;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
+
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +26,13 @@ public class SseServiceImpl implements SseService {
      * socketId SseEmitter对象映射集
      */
     private static Map<String, StreamResponse> sseEmitterMap = new ConcurrentHashMap<>();
+
+    /**
+     * 应用程序上下文
+     */
+    @Resource
+    ApplicationContext context;
+
     @Override
     @SneakyThrows
     public StreamResponse connect(String socketId) {
@@ -91,6 +100,7 @@ public class SseServiceImpl implements SseService {
             log.info(response.message());
             log.info(response.body().string());
         }
+
         while ((line = response.body().source().readUtf8Line()) != null) {
             if (line.contains(signal)) {
                 log.warn("检测到关闭信号:{}", signal);
@@ -110,6 +120,8 @@ public class SseServiceImpl implements SseService {
     @Async
     public void proxy(String socketId, Response response, String signal, SseMessageConverter converter) {
         StreamResponse sseEmitter = sseEmitterMap.get(socketId);
+        // 构建字符串组合，存入内存缓存，只允许读取一次 -->
+
         String line;
         if (response.isSuccessful()){
             log.info("请求成功");

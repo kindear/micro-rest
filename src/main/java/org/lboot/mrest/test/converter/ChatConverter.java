@@ -1,4 +1,4 @@
-package org.lboot.mrest.test;
+package org.lboot.mrest.test.converter;
 
 import cn.hutool.json.JSONUtil;
 import com.lucy.chat.params.chat.ChatResult;

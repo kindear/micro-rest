@@ -164,6 +164,7 @@ public class MicroRestClient {
         // 如果是表单 --> 请求头类型不为空
         if (Validator.isNotEmpty(header.get(HttpHeaders.CONTENT_TYPE))){
             String contentType = header.get(HttpHeaders.CONTENT_TYPE).toString();
+            log.info(contentType);
             if (contentType.startsWith("application/x-www-form-urlencoded")){
                 FormBody.Builder formBody = new FormBody.Builder();
                 for (Map.Entry<String, Object> entry : body.entrySet()) {
@@ -171,8 +172,11 @@ public class MicroRestClient {
                 }
                 requestBody = formBody.build();
             }else if (contentType.startsWith("multipart/form-data")){
+
+                log.info("表单文件上传");
                 // 获取文件信息
                 MultipartBody.Builder builder = new MultipartBody.Builder();
+                builder.setType(MultipartBody.FORM);
                 for (Map.Entry<String, Object> entry : body.entrySet()) {
                     if (entry.getValue() instanceof File){
                         File file = (File) entry.getValue();

@@ -268,6 +268,8 @@ public interface RequestHandler {
         Map<String,Object> headerMap = new HashMap<>();
         // 处理请求头默认配置
         for (String header:headers){
+            // 模板替换 --> 接口构建时间会增加
+            header = buildByProps(header);
             String[] parts = header.split(":");
             if (parts.length == 2){
                 headerMap.put(parts[0],parts[1]);

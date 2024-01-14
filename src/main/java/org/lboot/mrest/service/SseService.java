@@ -23,6 +23,7 @@ public interface SseService {
      * @param response
      * @param signal
      */
+    @Deprecated
     void proxy(String socketId, Response response, String signal);
 
     /**

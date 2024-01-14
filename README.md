@@ -16,9 +16,9 @@
 
 - [x] 请求参数自定义，`@PathVar` 自定义路径参数 , `@Query` 自定义查询参数
 
-- [x] 请求头自定义 ，`@Headers` 请求头支持
+- [x] 请求头自定义 ，`@Headers` 请求头支持，多种构建方式
 
-- [x] 请求体自定义， `@Body` 请求体支持
+- [x] 请求体自定义， `@Body` 请求体支持，多种构建方式
 
 - [x] 自定义请求客户端 `MicroRestClient`
 
@@ -184,6 +184,8 @@ public interface MicroRestChatApi {
    }
    ```
 
+   
+
 2. 指定参数非基础数据类型，例如`Map,用户自定义类`, 仅支持 `@Headers`，支持自动转化参数，下面定义效果与上面一致。
 
    > 自定义实体类
@@ -217,6 +219,8 @@ public interface MicroRestChatApi {
 
 3. 原子性数据参数优先级大于自定义类或`Map`, 会覆盖其中的数据。
 
+
+
 #### @Anno headers
 
 例如`@Get`, `@MicroPost`等一些列注解，都支持请求头参数配置，其配置形式如下:
@@ -234,7 +238,16 @@ public interface TestPostApi {
 
 这种方式一般用于固定数值的请求头，需要动态变化的，采用上面的方式进行组装。
 
+支持模板替换，自动匹配替换`application.properties`指定的数据项
 
+```java
+    @SsePost(value = "#{openai.chat.host}/v1/chat/completions",
+            headers = {"Authorization:Bearer #{openai.chat.key}"},
+            converter = ChatConverter.class)
+    StreamResponse chatCompletions(@Body Map<String,Object> params);
+```
+
+其中` headers = {"Authorization:Bearer #{openai.chat.key}"}`就是模板请求头用法
 
 ### 请求体构建
 
