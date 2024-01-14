@@ -10,6 +10,8 @@
 
 - [x] 传统`HTTP` 请求支持， `@Get` `@Post` `@Put` `@Delete` 支持
 
+- [x] 文件上传支持
+
 - [x] 微服务请求支持，`@MicroGet` `@MicroPost` `@MicroPut` `@MicroDelete` 支持，默认支持 `NacOS`，支持自定义拓展
 
 - [x] `SSE`请求支持，`@SseGet` `@SsePost`支持，类`GPT`请求实现转发
@@ -327,6 +329,43 @@ public abstract class ProxyContextDecorator {
 ```
 
 自定义实现需要基础该抽象类并重写
+
+
+
+### 文件上传支持
+
+通过对 `@Post`,`@MicroPost`请求头配置实现
+
+1. 请求头配置为 `   Content-Type:multipart/form-data`
+
+```java
+   @Post(value = "#{openai.chat.host}/v1/files",headers = {
+            "Content-Type:multipart/form-data",
+            "Authorization: Bearer #{openai.chat.key}"
+    })
+    Map<String,Object> uploadFile(@Body ChatFileParams params);
+```
+
+
+
+```java
+@Data
+public class ChatFileParams {
+    File file;
+    
+    String purpose;
+}
+
+```
+
+如果没有其余附加信息，可以只上传文件
+
+```java
+   @Post(value = "http://localhost:8080/v1/files",headers = {
+            "Content-Type:multipart/form-data",
+    })
+    Map<String,Object> uploadFile(@Body("fileKey") File file);
+```
 
 
 
