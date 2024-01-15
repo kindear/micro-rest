@@ -2,6 +2,7 @@ package org.lboot.mrest.handler;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.setting.dialect.Props;
 import lombok.extern.slf4j.Slf4j;
@@ -195,8 +196,6 @@ public interface RequestHandler {
                         // 如果不是，提取参数名
                         queryMap.put(parameter.getName(), args[i]);
                     }
-
-
                 }else {
                     if (!isCustom){
                         queryMap.put(query.value(), args[i]);
@@ -207,10 +206,16 @@ public interface RequestHandler {
         }
         // 读取配置文件替换模糊
         url = buildByProps(url);
+        // 移除空值
+        MapUtil.removeNullValue(pathMap);
         // 替换地址
         for (String pathKey:pathMap.keySet()){
+            // 空值不传入
             url = url.replace("{" + pathKey + "}" , pathMap.get(pathKey).toString());
+
         }
+        // 移除空值
+        MapUtil.removeNullValue(queryMap);
         //工具类方法
         String queryUrl = HttpUtil.toParams(queryMap);
         if (queryMap.isEmpty()){

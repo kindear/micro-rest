@@ -269,7 +269,7 @@ public class MicroRestClient {
      */
     @SneakyThrows
     public Response execute(){
-        log.info(clientTimeout.toString());
+        // log.info(clientTimeout.toString());
         // 请求客户端
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(clientTimeout.getConnectTimeout(), TimeUnit.SECONDS)
