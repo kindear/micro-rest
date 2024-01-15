@@ -16,4 +16,7 @@ public @interface Put {
 
     String[] headers() default {};
 
+    int connectTimeout() default 10;
+    int readTimeout() default 10;
+    int writeTimeout() default 10;
 }

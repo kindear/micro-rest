@@ -76,7 +76,9 @@ public class SseGetRequestHandler implements RequestHandler{
         proxyBuild.buildHeaders(headers);
         MicroRestClient client = new MicroRestClient()
                 .url(url)
-                .sse()
+                .connectTimeout(get.connectTimeout())
+                .readTimeout(get.readTimeout())
+                .writeTimeout(get.writeTimeout())
                 .method(HttpMethod.GET)
                 .header(headers);
         // 记录接口构建时间

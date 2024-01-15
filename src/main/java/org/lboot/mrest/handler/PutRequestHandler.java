@@ -77,6 +77,9 @@ public class PutRequestHandler implements RequestHandler{
         proxyBuild.buildBody(body);
         MicroRestClient client = new MicroRestClient()
                 .url(url)
+                .connectTimeout(put.connectTimeout())
+                .readTimeout(put.readTimeout())
+                .writeTimeout(put.writeTimeout())
                 .method(HttpMethod.PUT)
                 .header(headers)
                 .body(body);

@@ -17,4 +17,8 @@ public @interface MicroPut {
     // 请求头信息
     String[] headers() default {};
 
+    int connectTimeout() default 10;
+    int readTimeout() default 10;
+    int writeTimeout() default 10;
+
 }

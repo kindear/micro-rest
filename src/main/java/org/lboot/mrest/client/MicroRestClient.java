@@ -45,13 +45,29 @@ public class MicroRestClient {
 
     private boolean ok = true;
 
-    private boolean sse = false;
+    /**
+     * 客户端超时配置
+     */
+    private ClientTimeout clientTimeout = new ClientTimeout();
 
-    // 开启SSE模式
-    public MicroRestClient sse(){
-        this.sse = true;
+    // 连接超时配置
+    public MicroRestClient connectTimeout(Integer connectionTimeout){
+        clientTimeout.setConnectTimeout(connectionTimeout);
         return this;
     }
+
+    // 读取超时配置
+    public MicroRestClient readTimeout(Integer readTimeout){
+        clientTimeout.setReadTimeout(readTimeout);
+        return this;
+    }
+
+    // 写入超时配置
+    public MicroRestClient writeTimeout(Integer writeTimeout){
+        clientTimeout.setWriteTimeout(writeTimeout);
+        return this;
+    }
+
 
     public MicroRestClient header(Map<String,Object> header){
         // 如果不为空
@@ -173,7 +189,7 @@ public class MicroRestClient {
                 requestBody = formBody.build();
             }else if (contentType.startsWith("multipart/form-data")){
 
-                log.info("表单文件上传");
+                //log.info("表单文件上传");
                 // 获取文件信息
                 MultipartBody.Builder builder = new MultipartBody.Builder();
                 builder.setType(MultipartBody.FORM);
@@ -253,17 +269,13 @@ public class MicroRestClient {
      */
     @SneakyThrows
     public Response execute(){
-
+        log.info(clientTimeout.toString());
         // 请求客户端
-        OkHttpClient client = new OkHttpClient();
-        // 如果是SSE,则配置超时时间
-        if (sse){
-            client = new OkHttpClient.Builder()
-                    .connectTimeout(10, TimeUnit.SECONDS)
-                    .writeTimeout(50, TimeUnit.SECONDS)
-                    .readTimeout(10, TimeUnit.MINUTES)
-                    .build();
-        }
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(clientTimeout.getConnectTimeout(), TimeUnit.SECONDS)
+                .writeTimeout(clientTimeout.getWriteTimeout(), TimeUnit.SECONDS)
+                .readTimeout(clientTimeout.getReadTimeout(), TimeUnit.SECONDS)
+                .build();
         return client.newCall(getRequest()).execute();
 
     }

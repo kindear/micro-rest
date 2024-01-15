@@ -87,6 +87,9 @@ public class MicroPutRequestHandler implements RequestHandler{
         proxyBuild.buildBody(body);
         MicroRestClient client = new MicroRestClient()
                 .url(url)
+                .connectTimeout(microPut.connectTimeout())
+                .readTimeout(microPut.readTimeout())
+                .writeTimeout(microPut.writeTimeout())
                 .method(HttpMethod.PUT)
                 .header(headers)
                 .body(body);

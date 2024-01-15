@@ -81,6 +81,9 @@ public class MicroGetRequestHandler implements RequestHandler{
         proxyBuild.buildHeaders(headers);
         MicroRestClient client = new MicroRestClient()
                 .url(url)
+                .connectTimeout(microGet.connectTimeout())
+                .readTimeout(microGet.readTimeout())
+                .writeTimeout(microGet.writeTimeout())
                 .method(HttpMethod.GET)
                 .header(headers);
         // 记录接口构建时间

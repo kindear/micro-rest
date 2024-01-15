@@ -96,7 +96,9 @@ public class SsePostRequestHandler implements RequestHandler{
         proxyBuild.buildBody(body);
         MicroRestClient client = new MicroRestClient()
                 .url(url)
-                .sse()
+                .connectTimeout(post.connectTimeout())
+                .readTimeout(post.readTimeout())
+                .writeTimeout(post.writeTimeout())
                 .method(HttpMethod.POST)
                 .header(headers)
                 .body(body);

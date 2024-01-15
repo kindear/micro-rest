@@ -93,6 +93,9 @@ public class MicroPostRequestHandler implements RequestHandler{
         log.info(headers.toString());
         MicroRestClient client = new MicroRestClient()
                 .url(url)
+                .connectTimeout(microPost.connectTimeout())
+                .readTimeout(microPost.readTimeout())
+                .writeTimeout(microPost.writeTimeout())
                 .method(HttpMethod.POST)
                 .header(headers)
                 .body(body);

@@ -81,6 +81,9 @@ public class PostRequestHandler implements RequestHandler{
         proxyBuild.buildBody(body);
         MicroRestClient client = new MicroRestClient()
                 .url(url)
+                .connectTimeout(post.connectTimeout())
+                .readTimeout(post.readTimeout())
+                .writeTimeout(post.writeTimeout())
                 .method(HttpMethod.POST)
                 .header(headers)
                 .body(body);

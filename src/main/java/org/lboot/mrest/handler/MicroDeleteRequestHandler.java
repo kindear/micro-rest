@@ -79,6 +79,9 @@ public class MicroDeleteRequestHandler implements RequestHandler{
         proxyBuild.buildHeaders(headers);
         MicroRestClient client = new MicroRestClient()
                 .url(url)
+                .connectTimeout(microDelete.connectTimeout())
+                .readTimeout(microDelete.readTimeout())
+                .writeTimeout(microDelete.writeTimeout())
                 .method(HttpMethod.DELETE)
                 .header(headers);
         // 记录接口构建时间

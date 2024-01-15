@@ -24,4 +24,8 @@ public @interface SsePost {
     String signal() default "DONE";
 
     Class<? extends SseMessageConverter> converter() default DefaultSseMessageConverter.class;
+
+    int connectTimeout() default 10;
+    int readTimeout() default 600;
+    int writeTimeout() default 50;
 }
