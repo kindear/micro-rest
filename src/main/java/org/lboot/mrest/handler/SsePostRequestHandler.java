@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.Post;
+import org.lboot.mrest.annotation.ResponseHandler;
 import org.lboot.mrest.annotation.SsePost;
 import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.ProxyBuild;
@@ -18,6 +19,7 @@ import org.lboot.mrest.domain.StreamResponse;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ProxyContextDecorator;
+import org.lboot.mrest.service.ProxyResponseHandler;
 import org.lboot.mrest.service.SseService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -111,11 +113,16 @@ public class SsePostRequestHandler implements RequestHandler{
         context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
         // 获取SSE
         StreamResponse sseEmitter = sseService.connect(socketId);
-
+        // 判断是否存在相应处理器接口
+        ResponseHandler responseHandler = method.getAnnotation(ResponseHandler.class);
         if (response.isSuccessful()){
             sseService.proxy(socketId, response, signal, post.converter().newInstance());
             return sseEmitter;
         }else {
+            if (Validator.isNotEmpty(responseHandler)){
+                ProxyResponseHandler proxyResponseHandler = responseHandler.value().newInstance();
+                throw proxyResponseHandler.onFailure(response);
+            }
             String message = null;
             if (response.body() != null) {
                 message = response.body().string();

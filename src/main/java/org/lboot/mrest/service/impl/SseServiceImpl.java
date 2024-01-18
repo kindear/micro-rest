@@ -28,6 +28,12 @@ public class SseServiceImpl implements SseService {
     private static Map<String, StreamResponse> sseEmitterMap = new ConcurrentHashMap<>();
 
     /**
+     * socketId StringBuffer 完整消息映射
+     * 只支持读取一次，读取一次后清空
+     */
+    private static Map<String, StringBuffer> sseMsgMap = new ConcurrentHashMap<>();
+
+    /**
      * 应用程序上下文
      */
     @Resource
@@ -85,6 +91,8 @@ public class SseServiceImpl implements SseService {
     @Override
     public void complete(String socketId) {
         StreamResponse sseEmitter = sseEmitterMap.get(socketId);
+        // @TODO 广播完成信息
+
         sseEmitter.complete();
     }
 
@@ -121,7 +129,7 @@ public class SseServiceImpl implements SseService {
     public void proxy(String socketId, Response response, String signal, SseMessageConverter converter) {
         StreamResponse sseEmitter = sseEmitterMap.get(socketId);
         // 构建字符串组合，存入内存缓存，只允许读取一次 -->
-
+        StringBuffer sb = sseMsgMap.get(socketId);
         String line;
         if (response.isSuccessful()){
             log.info("请求成功");
@@ -137,8 +145,11 @@ public class SseServiceImpl implements SseService {
                 break;
             } else if (line.startsWith("data: ")) {
                 line = line.substring(6);
+                String sendMsg = converter.convert(line);
+                // 附加信息
+                sb.append(sendMsg);
                 // 发送信息
-                sendMessage(sseEmitter, converter.convert(line));
+                sendMessage(sseEmitter, converter.convert(sendMsg));
             }
         }
     }

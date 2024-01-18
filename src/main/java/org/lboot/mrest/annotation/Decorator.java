@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 
 /**
  * @author kindear
- * 装饰器标识,被该表示标记的,透传上下文信息
+ * 装饰器标识,被该表示标记的,透传 / 修改上下文信息
  */
 @Target({ElementType.METHOD,ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

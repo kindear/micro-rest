@@ -12,12 +12,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class MicroRestExceptionHandler {
     @ExceptionHandler(MicroRestException.class)
     public ResponseEntity<Object> handleMicroRequestException(MicroRestException e) {
-        log.error(e.getMessage(),e);
         HttpStatus status = HttpStatus.resolve(e.code);
         if (status != null){
-            return new ResponseEntity<>(JSONUtil.parseObj(e.getMessage()), status);
+            return new ResponseEntity<>(e.getMessage(), status);
         }
 
-        return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(e.getMessage(),HttpStatus.resolve(e.code));
     }
 }

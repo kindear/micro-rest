@@ -10,11 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.lboot.mrest.annotation.Decorator;
 import org.lboot.mrest.annotation.Post;
+import org.lboot.mrest.annotation.ResponseHandler;
 import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.ProxyBuild;
 import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ProxyContextDecorator;
+import org.lboot.mrest.service.ProxyResponseHandler;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -94,13 +96,24 @@ public class PostRequestHandler implements RequestHandler{
         proxyBuild.setExecuteRequestCost(timer.intervalRestart());
         // 发布事件
         context.publishEvent(new ProxyRequestExecuteEvent(this, proxyBuild));
+        // 判断是否存在相应处理器接口
+        ResponseHandler responseHandler = method.getAnnotation(ResponseHandler.class);
         if (response.isSuccessful()) {
             if (response.body() != null) {
-                return JSONUtil.toBean(response.body().string(),method.getReturnType(),true);
+                String bodyStr = response.body().string();
+                if (Validator.isNotEmpty(responseHandler)){
+                    ProxyResponseHandler proxyResponseHandler = responseHandler.value().newInstance();
+                    bodyStr = proxyResponseHandler.onSuccess(bodyStr);
+                }
+                return JSONUtil.toBean(bodyStr,method.getReturnType(),true);
             }else {
                 return null;
             }
         } else {
+            if (Validator.isNotEmpty(responseHandler)){
+                ProxyResponseHandler proxyResponseHandler = responseHandler.value().newInstance();
+                throw proxyResponseHandler.onFailure(response);
+            }
             // Proxy Request Error 需要抛出异常
             String message = null;
             if (response.body() != null) {
