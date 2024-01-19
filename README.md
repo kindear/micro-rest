@@ -304,7 +304,7 @@ public @interface Decorator {
 通过继承抽象类 `ProxyContextDecorator`并重写方法实现，在使用注解时指定自定义实现类
 
 ```java
-public abstract class  {
+public abstract class ProxyContextDecorator{
     public Map<String,Object> readHeader(){
         HashMap<String,Object> header = new HashMap<>();
         HttpServletRequest request =((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
@@ -347,7 +347,7 @@ public @interface ResponseHandler {
 
 > 自定义
 
-
+通过继承抽象类 `ProxyResponseHandler`并重写方法实现，在使用注解时指定自定义实现类
 
 ```java
 public abstract class ProxyResponseHandler{
@@ -369,10 +369,6 @@ public abstract class ProxyResponseHandler{
     }
 }
 ```
-
-
-
-
 
 
 
