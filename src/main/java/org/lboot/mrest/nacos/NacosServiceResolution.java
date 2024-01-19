@@ -8,7 +8,7 @@ import okhttp3.ResponseBody;
 import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.nacos.domain.ServiceHost;
-import org.lboot.mrest.service.ServiceResolution;
+import org.lboot.mrest.service.loader.ServiceResolution;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 

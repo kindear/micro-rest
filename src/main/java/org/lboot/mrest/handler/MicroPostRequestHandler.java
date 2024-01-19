@@ -17,11 +17,9 @@ import org.lboot.mrest.event.ProxyRequestExecuteEvent;
 import org.lboot.mrest.exception.MicroRestException;
 import org.lboot.mrest.service.ProxyContextDecorator;
 import org.lboot.mrest.service.ProxyResponseHandler;
-import org.lboot.mrest.service.ServiceResolution;
+import org.lboot.mrest.service.loader.ServiceResolution;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;

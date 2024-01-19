@@ -5,18 +5,24 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import org.lboot.mrest.domain.StreamResponse;
+import org.lboot.mrest.event.SseMessageCompleteEvent;
 import org.lboot.mrest.service.SseMessageConverter;
 import org.lboot.mrest.service.SseService;
 
+import org.lboot.mrest.service.loader.SseHookService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import javax.annotation.Nullable;
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -33,6 +39,10 @@ public class SseServiceImpl implements SseService {
      */
     private static Map<String, StringBuffer> sseMsgMap = new ConcurrentHashMap<>();
 
+    // Hook 服务列表注入
+    @Resource
+    Optional<List<SseHookService>> hookServicesOp;
+
     /**
      * 应用程序上下文
      */
@@ -47,14 +57,19 @@ public class SseServiceImpl implements SseService {
         if(Validator.isEmpty(sseEmitter)){
             sseEmitter = new StreamResponse();
         }
-
-        // 连接成功需要返回数据，否则会出现待处理状态
-//        sseEmitter.send(SseEmitter.event().comment(""));
+        // 构建消息构建起
+        StringBuffer sb = sseMsgMap.get(socketId);
+        if (Validator.isEmpty(sb)){
+            sb = new StringBuffer();
+        }
 
         // 连接断开
         sseEmitter.onCompletion(() -> {
             log.warn("{}:连接断开", socketId);
+            // 移除消息
             sseEmitterMap.remove(socketId);
+            sseMsgMap.remove(socketId);
+
         });
 
         // 连接超时
@@ -70,6 +85,15 @@ public class SseServiceImpl implements SseService {
         });
 
         sseEmitterMap.put(socketId, sseEmitter);
+
+        sseMsgMap.put(socketId,sb);
+        // 执行 Hook onConnect 服务
+        if (hookServicesOp.isPresent()){
+            List<SseHookService> hookServices = hookServicesOp.get();
+            for (SseHookService service:hookServices){
+                service.onConnect(socketId);
+            }
+        }
 
         return sseEmitter;
     }
@@ -91,8 +115,17 @@ public class SseServiceImpl implements SseService {
     @Override
     public void complete(String socketId) {
         StreamResponse sseEmitter = sseEmitterMap.get(socketId);
-        // @TODO 广播完成信息
-
+        // 获取字符串构建器
+        StringBuffer sb = sseMsgMap.get(socketId);
+        String msg = sb.toString();
+        context.publishEvent(new SseMessageCompleteEvent(this,msg));
+        // 执行 Hook onCompletion服务
+        if (hookServicesOp.isPresent()){
+            List<SseHookService> hookServices = hookServicesOp.get();
+            for (SseHookService service:hookServices){
+                service.onCompletion(socketId, msg);
+            }
+        }
         sseEmitter.complete();
     }
 
@@ -101,22 +134,23 @@ public class SseServiceImpl implements SseService {
     @Async
     public void proxy(String socketId, Response response, String signal) {
         StreamResponse sseEmitter = sseEmitterMap.get(socketId);
+        // 构建字符串组合，存入内存缓存，只允许读取一次 -->
+        StringBuffer sb = sseMsgMap.get(socketId);
         String line;
-        if (response.isSuccessful()){
-            log.info("请求成功");
-        }else {
+        if (!response.isSuccessful()){
             log.info(response.message());
             log.info(response.body().string());
         }
-
         while ((line = response.body().source().readUtf8Line()) != null) {
             if (line.contains(signal)) {
                 log.warn("检测到关闭信号:{}", signal);
                 response.close();
                 complete(socketId);
                 break;
-            } else if (line.startsWith("data: ")) {
+            }  else if (line.startsWith("data: ")) {
                 line = line.substring(6);
+                // 附加信息
+                sb.append(line);
                 // 发送信息
                 sendMessage(sseEmitter, line);
             }
@@ -131,9 +165,7 @@ public class SseServiceImpl implements SseService {
         // 构建字符串组合，存入内存缓存，只允许读取一次 -->
         StringBuffer sb = sseMsgMap.get(socketId);
         String line;
-        if (response.isSuccessful()){
-            log.info("请求成功");
-        }else {
+        if (!response.isSuccessful()){
             log.info(response.message());
             log.info(response.body().string());
         }
@@ -143,8 +175,9 @@ public class SseServiceImpl implements SseService {
                 response.close();
                 complete(socketId);
                 break;
-            } else if (line.startsWith("data: ")) {
+            } else if (line.startsWith("data: ")){
                 line = line.substring(6);
+
                 String sendMsg = converter.convert(line);
                 // 附加信息
                 sb.append(sendMsg);

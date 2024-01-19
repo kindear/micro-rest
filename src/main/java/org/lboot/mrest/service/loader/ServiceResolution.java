@@ -1,4 +1,4 @@
-package org.lboot.mrest.service;
+package org.lboot.mrest.service.loader;
 
 public interface ServiceResolution {
     /**

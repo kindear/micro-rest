@@ -1,7 +1,7 @@
 package org.lboot.mrest.config;
 
 import org.lboot.mrest.nacos.NacosServiceResolution;
-import org.lboot.mrest.service.ServiceResolution;
+import org.lboot.mrest.service.loader.ServiceResolution;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
