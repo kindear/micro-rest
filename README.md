@@ -299,12 +299,12 @@ public @interface Decorator {
 }
 ```
 
+> 自定义
 
-
-> 默认实现
+通过继承抽象类 `ProxyContextDecorator`并重写方法实现，在使用注解时指定自定义实现类
 
 ```java
-public abstract class ProxyContextDecorator {
+public abstract class  {
     public Map<String,Object> readHeader(){
         HashMap<String,Object> header = new HashMap<>();
         HttpServletRequest request =((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
@@ -328,7 +328,51 @@ public abstract class ProxyContextDecorator {
 }
 ```
 
-自定义实现需要基础该抽象类并重写
+### 响应拦截
+
+#### @ResponseHandler
+
+> 响应拦截
+
+```java
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface ResponseHandler {
+    // 拦截处理器默认实现 --> 
+    Class<? extends ProxyResponseHandler> value() default ProxyResponseHandler.class;
+}
+
+```
+
+> 自定义
+
+
+
+```java
+public abstract class ProxyResponseHandler{
+    public String onSuccess(String body){
+        return body;
+    }
+
+    @SneakyThrows
+    public MicroRestException onFailure(Response response){
+        String message = null;
+        if (response.body() != null) {
+            message = response.body().string();
+        }
+        if (Validator.isEmpty(message)){
+            message = response.message();
+        }
+        Integer code = response.code();
+        return new MicroRestException(code,message);
+    }
+}
+```
+
+
+
+
 
 
 
@@ -407,6 +451,10 @@ public @interface XXX {
     String url() default "";
 	// 默认请求头配置
     String[] headers() default {};
+    // 超时时间配置
+    int connectTimeout() default 10;
+    int readTimeout() default 10;
+    int writeTimeout() default 10;
 
 }
 ```
@@ -544,6 +592,11 @@ public @interface SseXXX {
     
     // 信息类型转换默认实现类
     Class<? extends SseMessageConverter> converter() default DefaultSseMessageConverter.class;
+    
+    // 超时时间配置
+    int connectTimeout() default 10;
+    int readTimeout() default 600;
+    int writeTimeout() default 50;
 
 }
 ```
@@ -561,6 +614,81 @@ public @interface SseXXX {
 public interface MicroRestChatApi {
     @SsePost(value = "#{openai.chat.host}/v1/chat/completions", converter = ChatConverter.class)
     StreamResponse chatCompletions(@Headers Map<String, Object> headers, @Body Map<String,Object> params, @SseSocketId String socketId);
+}
+```
+
+
+
+#### Sse Hook
+
+> 监听钩子
+
+通过拓展实现对应服务实现对应的业务逻辑
+
+```java
+public interface SseHookService {
+    /**
+     * 监听连接状态做对应处理
+     * @param socketId
+     */
+    void onConnect(String socketId);
+
+    /**
+     * 监听连接错误状态做处理
+     * @param socketId
+     */
+    void onError(String socketId);
+
+    /**
+     * 监听完成状态做对应处理
+     * @param socketId
+     * @param msg
+     */
+    void onCompletion(String socketId,String msg);
+
+}
+```
+
+
+
+#### Sse Event
+
+通过`Hook`可以实现对`SSE`状态的监听处理，除此之外，提供了事件驱动的方式实现监听(高度解耦)，目前支持了消息完成监听
+
+> SseMessageCompleteEvent
+
+`SSE`通信完成事件，`msg`为最后全部数据流经`SseMessageConverter`转化后组成的完整内容
+
+```java
+@Slf4j
+@Getter
+public class SseMessageCompleteEvent extends ApplicationEvent {
+    String msg;
+    public SseMessageCompleteEvent(Object source, String msg) {
+        super(source);
+        this.msg = msg;
+    }
+
+    public SseMessageCompleteEvent(Object source, Clock clock) {
+        super(source, clock);
+    }
+}
+```
+
+> 监听示例
+
+可以设置 `@Async`异步处理
+
+```java
+@Slf4j
+@Component
+public class MicroRestTestListener {
+    // @Async
+    @EventListener(SseMessageCompleteEvent.class)
+    public void SseMessageCompleteEventListener(SseMessageCompleteEvent event){
+        String msg = event.getMsg();
+        log.info("SSE传送消息为:{}", msg);
+    }
 }
 ```
 
