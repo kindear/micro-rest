@@ -95,8 +95,9 @@ public interface RequestHandler {
             Parameter parameter = parameters[i];
             Body body = parameter.getAnnotation(Body.class);
             if (Validator.isNotEmpty(body)){
-                // 如果为空且Bean
+
                 if (body.value().isEmpty()){
+                    // 如果为空且为自定义类
                     if (isCustomClass(args[i].getClass())){
                         Map<String,Object> beanMap = BeanUtil.beanToMap(args[i]);
                         for (String key: beanMap.keySet()){
@@ -105,7 +106,7 @@ public interface RequestHandler {
                             }
                         }
                     }else if (args[i] instanceof Map){
-                        // 如果是map
+                        // 如果为空且为 map
                         Map<String,Object> beanMap = (Map<String, Object>) args[i];
                         for (String key: beanMap.keySet()){
                             if (!bodyMap.containsKey(key)){
@@ -115,9 +116,8 @@ public interface RequestHandler {
                     }
 
                 }else {
-
-                    // 基础变量类型
-                    if ( !isCustomClass(args[i].getClass())){
+                    // 自定义类不支持 --> @Body("xxx") 指定方式 @TODO 后续可以增加，将其视为 map
+                    if (!isCustomClass(args[i].getClass())){
                         bodyMap.put(body.value(),args[i]);
                     }
 

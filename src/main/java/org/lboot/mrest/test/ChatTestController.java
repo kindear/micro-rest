@@ -20,6 +20,7 @@ import org.lboot.mrest.client.MicroRestClient;
 import org.lboot.mrest.domain.StreamResponse;
 import org.lboot.mrest.service.SseService;
 import org.lboot.mrest.test.domain.ChatFileParams;
+import org.lboot.mrest.test.domain.ChatMulFileParams;
 import org.lboot.mrest.test.domain.FileUploadParams;
 import org.lboot.mrest.test.service.MicroRestChatApi;
 import org.springframework.beans.BeanUtils;
@@ -78,17 +79,23 @@ public class ChatTestController {
         return microRestChatApi.chatCompletions(paramMap);
     }
 
-    @PostMapping("chat/file")
-    @ApiOperation(value = "文件上传")
-    @SneakyThrows
-    public Object uploadFile(){
-        File file = FileUtil.file("D:\\test.docx");
-        ChatFileParams fileParams = new ChatFileParams();
-        fileParams.setFile(file);
-        fileParams.setPurpose("assistants");
-        return microRestChatApi.uploadFile(fileParams);
-
-    }
+//    @PostMapping("chat/file")
+//    @ApiOperation(value = "文件上传")
+//    @SneakyThrows
+//    public Object uploadFile(){
+//        File file = FileUtil.file("D:\\test.docx");
+//        ChatFileParams fileParams = new ChatFileParams();
+//        fileParams.setFile(file);
+//        fileParams.setPurpose("assistants");
+//        return microRestChatApi.uploadFile(fileParams);
+//
+//    }
+//    @PostMapping("chat/file/v2")
+//    @ApiOperation(value = "文件上传v2")
+//    @SneakyThrows
+//    public Object uploadFileV2(ChatMulFileParams params){
+//        return microRestChatApi.uploadFileV2(params);
+//    }
 
 
 }

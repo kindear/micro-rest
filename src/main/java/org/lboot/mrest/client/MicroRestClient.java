@@ -11,6 +11,7 @@ import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.File;
@@ -198,7 +199,13 @@ public class MicroRestClient {
                         File file = (File) entry.getValue();
                         builder.addFormDataPart(entry.getKey(), file.getName(),
                                 RequestBody.create(MediaType.parse("application/octet-stream"), file));
-                    }else {
+                    }else if (entry.getValue() instanceof MultipartFile){
+                        MultipartFile file = (MultipartFile) entry.getValue();
+                        // Convert MultipartFile to RequestBody
+                        RequestBody fileRequestBody = RequestBody.create(MediaType.parse(file.getContentType()), file.getBytes());
+                        builder.addFormDataPart("file", file.getOriginalFilename(), fileRequestBody);
+                    }
+                    else {
                         // 构建非 File 参数
                         builder.addFormDataPart(entry.getKey(),entry.getValue().toString());
                     }

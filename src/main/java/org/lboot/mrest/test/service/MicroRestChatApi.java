@@ -5,6 +5,7 @@ import org.lboot.mrest.annotation.*;
 import org.lboot.mrest.domain.StreamResponse;
 import org.lboot.mrest.test.converter.ChatConverter;
 import org.lboot.mrest.test.domain.ChatFileParams;
+import org.lboot.mrest.test.domain.ChatMulFileParams;
 import org.lboot.mrest.test.handler.ChatResponseHandler;
 
 import java.util.Map;
@@ -24,4 +25,10 @@ public interface MicroRestChatApi {
     })
     Map<String,Object> uploadFile(@Body ChatFileParams params);
 
+
+    @Post(value = "#{openai.chat.host}/v1/files",headers = {
+            "Content-Type:multipart/form-data",
+            "Authorization: Bearer #{openai.chat.key}"
+    })
+    Map<String,Object> uploadFileV2(@Body ChatMulFileParams params);
 }
