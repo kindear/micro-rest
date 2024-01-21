@@ -28,7 +28,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-
         <!--proxy stub-->
         <dependency>
             <groupId>com.github.yungyu16.spring</groupId>

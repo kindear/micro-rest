@@ -17,7 +17,7 @@ import java.util.List;
 @Slf4j
 public class NacosServiceResolution implements ServiceResolution {
 
-    @Value("${nacos.discovery.server-addr}")
+    @Value("${nacos.discovery.server-addr:}")
     private String discoveryHost;
     /**
      * 构建示例列表请求
