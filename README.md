@@ -10,7 +10,7 @@
 
 - [x] 传统`HTTP` 请求支持， `@Get` `@Post` `@Put` `@Delete` 支持
 
-- [x] 文件上传支持
+- [x] 文件上传支持（`MultipartFile`或本地文件）
 
 - [x] 微服务请求支持，`@MicroGet` `@MicroPost` `@MicroPut` `@MicroDelete` 支持，默认支持 `NacOS`，支持自定义拓展
 
@@ -25,6 +25,8 @@
 - [x] 自定义请求客户端 `MicroRestClient`
 
 - [x] 支持装饰器模式 ，传递请求头和请求体
+
+- [x] 请求超时配置
 
   
 
@@ -386,7 +388,7 @@ public abstract class ProxyResponseHandler{
     Map<String,Object> uploadFile(@Body ChatFileParams params);
 ```
 
-
+2. 参数支持`MultipartFile`或`File`
 
 ```java
 @Data
@@ -395,8 +397,18 @@ public class ChatFileParams {
     
     String purpose;
 }
-
 ```
+
+```java
+@Data
+public class ChatFileParams {
+    MultipartFile file;
+    
+    String purpose;
+}
+```
+
+
 
 如果没有其余附加信息，可以只上传文件
 
@@ -405,6 +417,15 @@ public class ChatFileParams {
             "Content-Type:multipart/form-data",
     })
     Map<String,Object> uploadFile(@Body("fileKey") File file);
+```
+
+
+
+```java
+   @Post(value = "http://localhost:8080/v1/files",headers = {
+            "Content-Type:multipart/form-data",
+    })
+    Map<String,Object> uploadFile(@Body("fileKey") MultipartFile file);
 ```
 
 

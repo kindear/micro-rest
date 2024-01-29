@@ -9,7 +9,6 @@ import java.lang.annotation.*;
 /**
  * @author kindear
  * 请求响应处理器
- * @TODO 修改 onFailure 直接返回最终状态
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
